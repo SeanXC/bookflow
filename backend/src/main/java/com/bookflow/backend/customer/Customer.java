@@ -15,6 +15,10 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -29,19 +33,27 @@ public class Customer {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 
+	@NotNull
 	@ManyToOne(fetch = FetchType.LAZY, optional = false)
 	@JoinColumn(name = "tenant_id", nullable = false)
 	private Tenant tenant;
 
+	@NotBlank
+	@Size(max = 100)
 	@Column(name = "first_name", nullable = false, length = 100)
 	private String firstName;
 
+	@NotBlank
+	@Size(max = 100)
 	@Column(name = "last_name", nullable = false, length = 100)
 	private String lastName;
 
+	@Email
+	@Size(max = 254)
 	@Column(length = 254)
 	private String email;
 
+	@Size(max = 30)
 	@Column(length = 30)
 	private String phone;
 
