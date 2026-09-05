@@ -2,10 +2,10 @@
 .idea/
 *.iml
 
-# VS Code
+# VS Code / Cursor
 .vscode/
 
-# Java
+# Java / Maven
 backend/target/
 *.class
 
@@ -13,14 +13,14 @@ backend/target/
 frontend/node_modules/
 frontend/dist/
 
-# Environment
+# Environment variables
 .env
 .env.*
 !.env.example
 
+# Logs
+*.log
+
 # OS
 .DS_Store
 Thumbs.db
-
-# Logs
-*.log
