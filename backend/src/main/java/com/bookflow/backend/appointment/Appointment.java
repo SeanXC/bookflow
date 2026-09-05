@@ -21,6 +21,8 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.validation.constraints.AssertTrue;
+import jakarta.validation.constraints.NotNull;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -35,28 +37,35 @@ public class Appointment {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 
+	@NotNull
 	@ManyToOne(fetch = FetchType.LAZY, optional = false)
 	@JoinColumn(name = "tenant_id", nullable = false)
 	private Tenant tenant;
 
+	@NotNull
 	@ManyToOne(fetch = FetchType.LAZY, optional = false)
 	@JoinColumn(name = "customer_id", nullable = false)
 	private Customer customer;
 
+	@NotNull
 	@ManyToOne(fetch = FetchType.LAZY, optional = false)
 	@JoinColumn(name = "staff_id", nullable = false)
 	private Staff staff;
 
+	@NotNull
 	@ManyToOne(fetch = FetchType.LAZY, optional = false)
 	@JoinColumn(name = "service_id", nullable = false)
 	private Service service;
 
+	@NotNull
 	@Column(name = "start_time", nullable = false)
 	private Instant startTime;
 
+	@NotNull
 	@Column(name = "end_time", nullable = false)
 	private Instant endTime;
 
+	@NotNull
 	@Enumerated(EnumType.STRING)
 	@Column(nullable = false, length = 20)
 	private AppointmentStatus status = AppointmentStatus.CONFIRMED;
@@ -87,5 +96,10 @@ public class Appointment {
 		this.startTime = startTime;
 		this.endTime = endTime;
 		this.notes = notes;
+	}
+
+	@AssertTrue(message = "end time must be after start time")
+	public boolean isTimeRangeValid() {
+		return startTime == null || endTime == null || endTime.isAfter(startTime);
 	}
 }

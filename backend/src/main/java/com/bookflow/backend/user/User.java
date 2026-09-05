@@ -17,6 +17,10 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -31,16 +35,23 @@ public class User {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 
+	@NotNull
 	@ManyToOne(fetch = FetchType.LAZY, optional = false)
 	@JoinColumn(name = "tenant_id", nullable = false)
 	private Tenant tenant;
 
+	@NotBlank
+	@Email
+	@Size(max = 254)
 	@Column(nullable = false, unique = true, length = 254)
 	private String email;
 
+	@NotBlank
+	@Size(max = 255)
 	@Column(name = "password_hash", nullable = false, length = 255)
 	private String passwordHash;
 
+	@NotNull
 	@Enumerated(EnumType.STRING)
 	@Column(nullable = false, length = 20)
 	private Role role;

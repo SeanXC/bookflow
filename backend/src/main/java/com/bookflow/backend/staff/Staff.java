@@ -13,6 +13,9 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -27,6 +30,7 @@ public class Staff {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 
+	@NotNull
 	@ManyToOne(fetch = FetchType.LAZY, optional = false)
 	@JoinColumn(name = "tenant_id", nullable = false)
 	private Tenant tenant;
@@ -35,12 +39,17 @@ public class Staff {
 	@JoinColumn(name = "user_id", unique = true)
 	private User user;
 
+	@NotBlank
+	@Size(max = 100)
 	@Column(name = "first_name", nullable = false, length = 100)
 	private String firstName;
 
+	@NotBlank
+	@Size(max = 100)
 	@Column(name = "last_name", nullable = false, length = 100)
 	private String lastName;
 
+	@Size(max = 30)
 	@Column(length = 30)
 	private String phone;
 
