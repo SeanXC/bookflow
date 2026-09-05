@@ -54,4 +54,15 @@ public class Staff {
 		this.lastName = lastName;
 		this.phone = phone;
 	}
+
+	public void updateDetails(User user, String firstName, String lastName, String phone) {
+		this.user = user;
+		this.firstName = firstName;
+		this.lastName = lastName;
+		this.phone = phone;
+	}
+
+	public void deactivate() {
+		this.active = false;
+	}
 }

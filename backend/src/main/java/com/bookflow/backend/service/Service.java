@@ -58,4 +58,19 @@ public class Service {
 		this.price = price;
 		this.durationMinutes = durationMinutes;
 	}
+
+	public void updateDetails(
+			String name,
+			String description,
+			BigDecimal price,
+			int durationMinutes) {
+		this.name = name;
+		this.description = description;
+		this.price = price;
+		this.durationMinutes = durationMinutes;
+	}
+
+	public void deactivate() {
+		this.active = false;
+	}
 }
