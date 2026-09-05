@@ -4,8 +4,8 @@ BookFlow is a multi-tenant appointment and business management SaaS for small se
 
 ## Tech Stack
 
-- Java 17
-- Spring Boot 3
+- Java 21
+- Spring Boot 4.0.8
 - PostgreSQL
 - React 18
 - TypeScript

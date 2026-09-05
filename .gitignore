@@ -18,6 +18,9 @@ frontend/dist/
 .env.*
 !.env.example
 
+# Local project specifications
+.private-specs/
+
 # Logs
 *.log
 
