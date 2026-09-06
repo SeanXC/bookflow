@@ -98,6 +98,25 @@ public class Appointment {
 		this.notes = notes;
 	}
 
+	public void updateDetails(
+			Customer customer,
+			Staff staff,
+			Service service,
+			Instant startTime,
+			Instant endTime,
+			String notes) {
+		this.customer = customer;
+		this.staff = staff;
+		this.service = service;
+		this.startTime = startTime;
+		this.endTime = endTime;
+		this.notes = notes;
+	}
+
+	public void updateStatus(AppointmentStatus status) {
+		this.status = status;
+	}
+
 	@AssertTrue(message = "end time must be after start time")
 	public boolean isTimeRangeValid() {
 		return startTime == null || endTime == null || endTime.isAfter(startTime);
