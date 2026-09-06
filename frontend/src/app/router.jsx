@@ -5,6 +5,7 @@ import ProtectedRoute from '../layout/ProtectedRoute.jsx'
 import PlaceholderPage from '../shared/components/PlaceholderPage.jsx'
 import HomeRedirect from './HomeRedirect.jsx'
 import {
+  CustomerDetailPage,
   CustomerListPage,
   LoginPage,
   RegisterPage,
@@ -63,6 +64,10 @@ export const router = createBrowserRouter([
               {
                 path: 'customers',
                 element: <CustomerListPage />,
+              },
+              {
+                path: 'customers/:customerId',
+                element: <CustomerDetailPage />,
               },
               {
                 path: 'staff',
