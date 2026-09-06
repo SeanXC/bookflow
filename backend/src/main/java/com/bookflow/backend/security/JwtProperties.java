@@ -13,5 +13,6 @@ import jakarta.validation.constraints.Size;
 @ConfigurationProperties(prefix = "bookflow.security.jwt")
 public record JwtProperties(
 		@NotBlank @Size(min = 32) String secret,
+		@NotBlank String issuer,
 		@NotNull Duration accessTokenTtl) {
 }
