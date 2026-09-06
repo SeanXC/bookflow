@@ -72,7 +72,11 @@ class AuthenticationIntegrationTest {
 		mockMvc.perform(get("/api/docs/openapi"))
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$.info.title").value("BookFlow API"))
-			.andExpect(jsonPath("$.components.securitySchemes.bearerAuth").exists());
+			.andExpect(jsonPath("$.components.securitySchemes.bearerAuth").exists())
+			.andExpect(jsonPath("$.paths['/api/appointments'].get.tags[0]")
+					.value("Appointments"))
+			.andExpect(jsonPath("$.paths['/api/appointments'].post.responses['409']")
+					.exists());
 	}
 
 	@Test
