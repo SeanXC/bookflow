@@ -20,3 +20,6 @@ export const ServiceListPage = lazy(
 export const StaffListPage = lazy(
   () => import('../staff/pages/StaffListPage.jsx'),
 )
+export const UserListPage = lazy(
+  () => import('../user/pages/UserListPage.jsx'),
+)
