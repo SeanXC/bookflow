@@ -1,6 +1,19 @@
-import { Box, Chip, Container, Paper, Stack, Typography } from '@mui/material'
+import {
+  Box,
+  Button,
+  Chip,
+  Container,
+  Paper,
+  Stack,
+  Typography,
+} from '@mui/material'
+import { Link as RouterLink } from 'react-router-dom'
+
+import { useAuth } from '../auth/context/useAuth.js'
 
 function App() {
+  const { isAuthenticated, user } = useAuth()
+
   return (
     <Box
       component="main"
@@ -52,7 +65,22 @@ function App() {
               The application foundation is ready. Authentication and the
               tenant workspace come next.
             </Typography>
-            <Chip label="React 18 · JavaScript · Material UI" variant="outlined" />
+            {isAuthenticated ? (
+              <Chip
+                color="success"
+                label={`Signed in as ${user?.email}`}
+                variant="outlined"
+              />
+            ) : (
+              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
+                <Button component={RouterLink} to="/login" variant="contained">
+                  Sign in
+                </Button>
+                <Button component={RouterLink} to="/register" variant="outlined">
+                  Create account
+                </Button>
+              </Stack>
+            )}
           </Stack>
         </Paper>
       </Container>
