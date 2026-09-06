@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.bookflow.backend.common.exception.ResourceNotFoundException;
@@ -20,15 +21,18 @@ public class ServiceManagementService {
 	private final ServiceRepository serviceRepository;
 	private final TenantRepository tenantRepository;
 
+	@PreAuthorize("hasAnyRole('OWNER', 'RECEPTIONIST', 'STAFF')")
 	public Service getService(Long tenantId, Long serviceId) {
 		return serviceRepository.findByIdAndTenantId(serviceId, tenantId)
 				.orElseThrow(() -> new ResourceNotFoundException("Service", serviceId));
 	}
 
+	@PreAuthorize("hasAnyRole('OWNER', 'RECEPTIONIST', 'STAFF')")
 	public Page<Service> getAllServices(Long tenantId, Pageable pageable) {
 		return serviceRepository.findAllByTenantId(tenantId, pageable);
 	}
 
+	@PreAuthorize("hasRole('OWNER')")
 	@Transactional
 	public Service createService(
 			Long tenantId,
@@ -43,6 +47,7 @@ public class ServiceManagementService {
 				new Service(tenant, name, description, price, durationMinutes));
 	}
 
+	@PreAuthorize("hasRole('OWNER')")
 	@Transactional
 	public Service updateService(
 			Long tenantId,
@@ -56,6 +61,7 @@ public class ServiceManagementService {
 		return service;
 	}
 
+	@PreAuthorize("hasRole('OWNER')")
 	@Transactional
 	public void deactivateService(Long tenantId, Long serviceId) {
 		getService(tenantId, serviceId).deactivate();

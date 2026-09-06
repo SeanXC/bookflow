@@ -2,6 +2,7 @@ package com.bookflow.backend.staff;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,15 +23,18 @@ public class StaffService {
 	private final TenantRepository tenantRepository;
 	private final UserRepository userRepository;
 
+	@PreAuthorize("hasAnyRole('OWNER', 'RECEPTIONIST')")
 	public Staff getStaff(Long tenantId, Long staffId) {
 		return staffRepository.findByIdAndTenantId(staffId, tenantId)
 				.orElseThrow(() -> new ResourceNotFoundException("Staff", staffId));
 	}
 
+	@PreAuthorize("hasAnyRole('OWNER', 'RECEPTIONIST')")
 	public Page<Staff> getAllStaff(Long tenantId, Pageable pageable) {
 		return staffRepository.findAllByTenantId(tenantId, pageable);
 	}
 
+	@PreAuthorize("hasRole('OWNER')")
 	@Transactional
 	public Staff createStaff(
 			Long tenantId,
@@ -44,6 +48,7 @@ public class StaffService {
 		return staffRepository.save(new Staff(tenant, user, firstName, lastName, phone));
 	}
 
+	@PreAuthorize("hasRole('OWNER')")
 	@Transactional
 	public Staff updateStaff(
 			Long tenantId,
@@ -58,6 +63,7 @@ public class StaffService {
 		return staff;
 	}
 
+	@PreAuthorize("hasRole('OWNER')")
 	@Transactional
 	public void deactivateStaff(Long tenantId, Long staffId) {
 		getStaff(tenantId, staffId).deactivate();
