@@ -3,6 +3,7 @@ import { CssBaseline, ThemeProvider } from '@mui/material'
 import { RouterProvider } from 'react-router-dom'
 
 import { queryClient } from '../api/queryClient.js'
+import AuthProvider from '../auth/context/AuthProvider.jsx'
 import { router } from './router.jsx'
 import { theme } from './theme.js'
 
@@ -11,7 +12,9 @@ function AppProviders() {
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <QueryClientProvider client={queryClient}>
-        <RouterProvider router={router} />
+        <AuthProvider>
+          <RouterProvider router={router} />
+        </AuthProvider>
       </QueryClientProvider>
     </ThemeProvider>
   )
