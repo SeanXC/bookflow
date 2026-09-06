@@ -5,6 +5,7 @@ import ProtectedRoute from '../layout/ProtectedRoute.jsx'
 import PlaceholderPage from '../shared/components/PlaceholderPage.jsx'
 import HomeRedirect from './HomeRedirect.jsx'
 import {
+  AppointmentListPage,
   CustomerDetailPage,
   CustomerListPage,
   LoginPage,
@@ -49,12 +50,7 @@ export const router = createBrowserRouter([
           },
           {
             path: 'appointments',
-            element: (
-              <PlaceholderPage
-                description="Review and manage the tenant appointment schedule."
-                title="Appointments"
-              />
-            ),
+            element: <AppointmentListPage />,
           },
           {
             element: (
