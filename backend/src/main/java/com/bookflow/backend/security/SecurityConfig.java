@@ -1,7 +1,11 @@
 package com.bookflow.backend.security;
 
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.ProviderManager;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -12,16 +16,24 @@ import org.springframework.security.web.SecurityFilterChain;
 
 @Configuration
 @EnableMethodSecurity
+@EnableConfigurationProperties(JwtProperties.class)
 public class SecurityConfig {
 
 	@Bean
-	public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+	public SecurityFilterChain securityFilterChain(
+			HttpSecurity http,
+			BookFlowJwtAuthenticationConverter authenticationConverter,
+			RestAuthenticationEntryPoint authenticationEntryPoint) throws Exception {
 		http
 			.csrf(AbstractHttpConfigurer::disable)
 			.httpBasic(AbstractHttpConfigurer::disable)
 			.formLogin(AbstractHttpConfigurer::disable)
 			.sessionManagement(session ->
 				session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+			.oauth2ResourceServer(resourceServer -> resourceServer
+				.jwt(jwt -> jwt.jwtAuthenticationConverter(authenticationConverter)))
+			.exceptionHandling(exceptions ->
+				exceptions.authenticationEntryPoint(authenticationEntryPoint))
 			.authorizeHttpRequests(authorize -> authorize
 				.requestMatchers("/api/auth/**", "/error").permitAll()
 				.anyRequest().authenticated());
@@ -32,5 +44,14 @@ public class SecurityConfig {
 	@Bean
 	public PasswordEncoder passwordEncoder() {
 		return new BCryptPasswordEncoder();
+	}
+
+	@Bean
+	public AuthenticationManager authenticationManager(
+			BookFlowUserDetailsService userDetailsService,
+			PasswordEncoder passwordEncoder) {
+		DaoAuthenticationProvider provider = new DaoAuthenticationProvider(userDetailsService);
+		provider.setPasswordEncoder(passwordEncoder);
+		return new ProviderManager(provider);
 	}
 }

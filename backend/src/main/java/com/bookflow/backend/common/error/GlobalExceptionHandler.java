@@ -6,10 +6,12 @@ import java.util.stream.Collectors;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import com.bookflow.backend.common.exception.DuplicateResourceException;
 import com.bookflow.backend.common.exception.ResourceNotFoundException;
 
 import jakarta.validation.ConstraintViolationException;
@@ -24,6 +26,23 @@ public class GlobalExceptionHandler {
 				HttpStatus.NOT_FOUND,
 				"RESOURCE_NOT_FOUND",
 				exception.getMessage());
+	}
+
+	@ExceptionHandler(DuplicateResourceException.class)
+	public ResponseEntity<ApiErrorResponse> handleDuplicateResource(
+			DuplicateResourceException exception) {
+		return buildResponse(
+				HttpStatus.CONFLICT,
+				"DUPLICATE_RESOURCE",
+				exception.getMessage());
+	}
+
+	@ExceptionHandler(AuthenticationException.class)
+	public ResponseEntity<ApiErrorResponse> handleAuthenticationException() {
+		return buildResponse(
+				HttpStatus.UNAUTHORIZED,
+				"INVALID_CREDENTIALS",
+				"Invalid email or password.");
 	}
 
 	@ExceptionHandler(MethodArgumentNotValidException.class)
