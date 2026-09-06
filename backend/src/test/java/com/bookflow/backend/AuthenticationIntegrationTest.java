@@ -68,6 +68,14 @@ class AuthenticationIntegrationTest {
 	private EntityManager entityManager;
 
 	@Test
+	void openApiDocumentationIsPubliclyAccessible() throws Exception {
+		mockMvc.perform(get("/api/docs/openapi"))
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.info.title").value("BookFlow API"))
+			.andExpect(jsonPath("$.components.securitySchemes.bearerAuth").exists());
+	}
+
+	@Test
 	void registerCreatesAnOwnerAndReturnsAccessToken() throws Exception {
 		mockMvc.perform(post("/api/auth/register")
 				.contentType(MediaType.APPLICATION_JSON)

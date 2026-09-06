@@ -11,12 +11,14 @@ import com.bookflow.backend.auth.dto.AuthResponse;
 import com.bookflow.backend.auth.dto.LoginRequest;
 import com.bookflow.backend.auth.dto.RegisterRequest;
 
+import io.swagger.v3.oas.annotations.security.SecurityRequirements;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/api/auth")
 @RequiredArgsConstructor
+@SecurityRequirements
 public class AuthController {
 
 	private final AuthService authService;
