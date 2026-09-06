@@ -23,7 +23,8 @@ public class SecurityConfig {
 	public SecurityFilterChain securityFilterChain(
 			HttpSecurity http,
 			BookFlowJwtAuthenticationConverter authenticationConverter,
-			RestAuthenticationEntryPoint authenticationEntryPoint) throws Exception {
+			RestAuthenticationEntryPoint authenticationEntryPoint,
+			RestAccessDeniedHandler accessDeniedHandler) throws Exception {
 		http
 			.csrf(AbstractHttpConfigurer::disable)
 			.httpBasic(AbstractHttpConfigurer::disable)
@@ -33,7 +34,9 @@ public class SecurityConfig {
 			.oauth2ResourceServer(resourceServer -> resourceServer
 				.jwt(jwt -> jwt.jwtAuthenticationConverter(authenticationConverter)))
 			.exceptionHandling(exceptions ->
-				exceptions.authenticationEntryPoint(authenticationEntryPoint))
+				exceptions
+					.authenticationEntryPoint(authenticationEntryPoint)
+					.accessDeniedHandler(accessDeniedHandler))
 			.authorizeHttpRequests(authorize -> authorize
 				.requestMatchers("/api/auth/**", "/error").permitAll()
 				.anyRequest().authenticated());
