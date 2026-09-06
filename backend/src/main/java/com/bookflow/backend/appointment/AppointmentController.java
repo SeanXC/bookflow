@@ -2,7 +2,6 @@ package com.bookflow.backend.appointment;
 
 import java.time.Instant;
 
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
@@ -19,6 +18,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.bookflow.backend.common.dto.PageResponse;
 import com.bookflow.backend.appointment.dto.AppointmentRequest;
 import com.bookflow.backend.appointment.dto.AppointmentResponse;
 import com.bookflow.backend.appointment.dto.AppointmentStatusRequest;
@@ -58,7 +58,7 @@ public class AppointmentController {
 
 	@GetMapping
 	@Operation(summary = "List and filter appointments")
-	public Page<AppointmentResponse> getAllAppointments(
+	public PageResponse<AppointmentResponse> getAllAppointments(
 			@Parameter(description = "Filter by staff ID; ignored for STAFF users")
 			@RequestParam(required = false) Long staffId,
 			@Parameter(description = "Filter by appointment status")
@@ -73,7 +73,7 @@ public class AppointmentController {
 				size = 20,
 				sort = {"startTime", "id"},
 				direction = Sort.Direction.DESC) Pageable pageable) {
-		return appointmentService
+		return PageResponse.from(appointmentService
 				.getAllAppointments(
 						currentUserProvider.getTenantId(),
 						staffId,
@@ -81,7 +81,7 @@ public class AppointmentController {
 						from,
 						to,
 						pageable)
-				.map(AppointmentResponse::from);
+				.map(AppointmentResponse::from));
 	}
 
 	@GetMapping("/{appointmentId}")

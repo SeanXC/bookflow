@@ -1,7 +1,9 @@
 package com.bookflow.backend;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.options;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -140,6 +142,99 @@ class AuthenticationIntegrationTest {
 			.andExpect(status().isUnauthorized())
 			.andExpect(jsonPath("$.status").value(401))
 			.andExpect(jsonPath("$.error").value("UNAUTHORIZED"));
+	}
+
+	@Test
+	void configuredFrontendOriginCanCompleteCorsPreflight() throws Exception {
+		mockMvc.perform(options("/api/services")
+				.header(HttpHeaders.ORIGIN, "http://localhost:5173")
+				.header(HttpHeaders.ACCESS_CONTROL_REQUEST_METHOD, "GET")
+				.header(
+						HttpHeaders.ACCESS_CONTROL_REQUEST_HEADERS,
+						"Authorization, Content-Type"))
+			.andExpect(status().isOk())
+			.andExpect(header().string(
+					HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN,
+					"http://localhost:5173"));
+	}
+
+	@Test
+	void unconfiguredOriginIsRejectedByCors() throws Exception {
+		mockMvc.perform(options("/api/services")
+				.header(HttpHeaders.ORIGIN, "https://untrusted.example")
+				.header(HttpHeaders.ACCESS_CONTROL_REQUEST_METHOD, "GET"))
+			.andExpect(status().isForbidden())
+			.andExpect(header().doesNotExist(
+					HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN));
+	}
+
+	@Test
+	void listEndpointsReturnTheStablePaginationEnvelope() throws Exception {
+		String token = registerOwner("pagination-owner@example.com").accessToken();
+
+		mockMvc.perform(get("/api/customers")
+				.queryParam("page", "0")
+				.queryParam("size", "10")
+				.header(HttpHeaders.AUTHORIZATION, bearer(token)))
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.content").isArray())
+			.andExpect(jsonPath("$.page").value(0))
+			.andExpect(jsonPath("$.size").value(10))
+			.andExpect(jsonPath("$.totalElements").value(0))
+			.andExpect(jsonPath("$.totalPages").value(0))
+			.andExpect(jsonPath("$.pageable").doesNotExist());
+	}
+
+	@Test
+	void invalidQueryParameterReturnsTheStandardErrorEnvelope() throws Exception {
+		String token = registerOwner("invalid-filter-owner@example.com").accessToken();
+
+		mockMvc.perform(get("/api/appointments")
+				.queryParam("status", "NOT_A_STATUS")
+				.header(HttpHeaders.AUTHORIZATION, bearer(token)))
+			.andExpect(status().isBadRequest())
+			.andExpect(jsonPath("$.status").value(400))
+			.andExpect(jsonPath("$.error").value("INVALID_PARAMETER"))
+			.andExpect(jsonPath("$.message").value(
+					"Invalid value for parameter 'status'."))
+			.andExpect(jsonPath("$.timestamp").exists());
+	}
+
+	@Test
+	void invalidSortPropertyReturnsTheStandardErrorEnvelope() throws Exception {
+		String token = registerOwner("invalid-sort-owner@example.com").accessToken();
+
+		mockMvc.perform(get("/api/customers")
+				.queryParam("sort", "unknownField,asc")
+				.header(HttpHeaders.AUTHORIZATION, bearer(token)))
+			.andExpect(status().isBadRequest())
+			.andExpect(jsonPath("$.error").value("INVALID_PARAMETER"))
+			.andExpect(jsonPath("$.message").value(
+					"Invalid sort property 'unknownField'."));
+	}
+
+	@Test
+	void unknownApiRouteReturnsTheStandardErrorEnvelope() throws Exception {
+		String token = registerOwner("unknown-route-owner@example.com").accessToken();
+
+		mockMvc.perform(get("/api/not-a-real-endpoint")
+				.header(HttpHeaders.AUTHORIZATION, bearer(token)))
+			.andExpect(status().isNotFound())
+			.andExpect(jsonPath("$.status").value(404))
+			.andExpect(jsonPath("$.error").value("RESOURCE_NOT_FOUND"))
+			.andExpect(jsonPath("$.message").value(
+					"The requested endpoint does not exist."));
+	}
+
+	@Test
+	void unsupportedHttpMethodReturnsTheStandardErrorEnvelope() throws Exception {
+		String token = registerOwner("method-owner@example.com").accessToken();
+
+		mockMvc.perform(post("/api/dashboard/summary")
+				.header(HttpHeaders.AUTHORIZATION, bearer(token)))
+			.andExpect(status().isMethodNotAllowed())
+			.andExpect(jsonPath("$.status").value(405))
+			.andExpect(jsonPath("$.error").value("METHOD_NOT_ALLOWED"));
 	}
 
 	@Test

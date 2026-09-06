@@ -1,6 +1,5 @@
 package com.bookflow.backend.user;
 
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
@@ -13,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.bookflow.backend.common.dto.PageResponse;
 import com.bookflow.backend.common.error.ApiErrorResponse;
 import com.bookflow.backend.security.CurrentUserProvider;
 import com.bookflow.backend.user.dto.UserEnabledRequest;
@@ -51,11 +51,11 @@ public class UserController {
 
 	@GetMapping
 	@Operation(summary = "List tenant user accounts")
-	public Page<UserResponse> getAllUsers(
+	public PageResponse<UserResponse> getAllUsers(
 			@PageableDefault(size = 20, sort = {"email", "id"}) Pageable pageable) {
-		return userManagementService
+		return PageResponse.from(userManagementService
 				.getAllUsers(currentUserProvider.getTenantId(), pageable)
-				.map(UserResponse::from);
+				.map(UserResponse::from));
 	}
 
 	@PostMapping

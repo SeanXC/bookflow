@@ -1,6 +1,5 @@
 package com.bookflow.backend.customer;
 
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
@@ -16,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.bookflow.backend.appointment.dto.AppointmentResponse;
+import com.bookflow.backend.common.dto.PageResponse;
 import com.bookflow.backend.common.error.ApiErrorResponse;
 import com.bookflow.backend.customer.dto.CustomerRequest;
 import com.bookflow.backend.customer.dto.CustomerResponse;
@@ -52,31 +52,31 @@ public class CustomerController {
 
 	@GetMapping
 	@Operation(summary = "List and search customers")
-	public Page<CustomerResponse> getAllCustomers(
+	public PageResponse<CustomerResponse> getAllCustomers(
 			@Parameter(description = "Case-insensitive name, email, or phone search")
 			@RequestParam(required = false) String search,
 			@PageableDefault(
 				size = 20,
 				sort = {"lastName", "firstName", "id"}) Pageable pageable) {
-		return customerService
+		return PageResponse.from(customerService
 				.getAllCustomers(currentUserProvider.getTenantId(), search, pageable)
-				.map(CustomerResponse::from);
+				.map(CustomerResponse::from));
 	}
 
 	@GetMapping("/{customerId}/appointments")
 	@Operation(summary = "List a customer's appointment history")
-	public Page<AppointmentResponse> getAppointmentHistory(
+	public PageResponse<AppointmentResponse> getAppointmentHistory(
 			@PathVariable Long customerId,
 			@PageableDefault(
 				size = 20,
 				sort = {"startTime", "id"},
 				direction = Sort.Direction.DESC) Pageable pageable) {
-		return customerService
+		return PageResponse.from(customerService
 				.getAppointmentHistory(
 						currentUserProvider.getTenantId(),
 						customerId,
 						pageable)
-				.map(AppointmentResponse::from);
+				.map(AppointmentResponse::from));
 	}
 
 	@GetMapping("/{customerId}")
