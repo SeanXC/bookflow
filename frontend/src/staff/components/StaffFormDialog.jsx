@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import {
   Alert,
   Button,
@@ -20,11 +20,11 @@ import { useCreateStaff, useUpdateStaff } from '../api/staffMutations.js'
 function StaffFormDialog({ onClose, open, staff, users }) {
   const createMutation = useCreateStaff()
   const updateMutation = useUpdateStaff()
-  const [firstName, setFirstName] = useState('')
-  const [lastName, setLastName] = useState('')
-  const [phone, setPhone] = useState('')
+  const [firstName, setFirstName] = useState(staff?.firstName ?? '')
+  const [lastName, setLastName] = useState(staff?.lastName ?? '')
+  const [phone, setPhone] = useState(staff?.phone ?? '')
   const [userId, setUserId] = useState(
-    /** @type {number | ''} */ (''),
+    /** @type {number | ''} */ (staff?.userId ?? ''),
   )
   const [errorMessage, setErrorMessage] = useState('')
   const isEditing = staff !== null
@@ -39,17 +39,6 @@ function StaffFormDialog({ onClose, open, staff, users }) {
       ),
     [staff?.userId, users],
   )
-
-  useEffect(() => {
-    if (!open) {
-      return
-    }
-    setFirstName(staff?.firstName ?? '')
-    setLastName(staff?.lastName ?? '')
-    setPhone(staff?.phone ?? '')
-    setUserId(staff?.userId ?? '')
-    setErrorMessage('')
-  }, [open, staff])
 
   /**
    * @param {import('react').FormEvent<HTMLFormElement>} event

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import {
   Alert,
   Button,
@@ -15,17 +15,8 @@ import { useDeactivateStaff } from '../api/staffMutations.js'
 function DeactivateStaffDialog({ onClose, staff }) {
   const deactivateMutation = useDeactivateStaff()
   const [errorMessage, setErrorMessage] = useState('')
-  const open = staff !== null
-
-  useEffect(() => {
-    setErrorMessage('')
-  }, [staff])
 
   async function handleDeactivate() {
-    if (!staff) {
-      return
-    }
-
     setErrorMessage('')
     try {
       await deactivateMutation.mutateAsync(staff.id)
@@ -44,14 +35,13 @@ function DeactivateStaffDialog({ onClose, staff }) {
           onClose()
         }
       }}
-      open={open}
+      open
     >
       <DialogTitle>Deactivate staff member?</DialogTitle>
       <DialogContent>
         <DialogContentText>
-          {staff
-            ? `${staff.firstName} ${staff.lastName} will no longer be available for new appointments.`
-            : ''}
+          {staff.firstName} {staff.lastName} will no longer be available for new
+          appointments.
         </DialogContentText>
         {errorMessage && (
           <Alert severity="error" sx={{ mt: 2 }}>
@@ -82,7 +72,7 @@ DeactivateStaffDialog.propTypes = {
     id: PropTypes.number.isRequired,
     firstName: PropTypes.string.isRequired,
     lastName: PropTypes.string.isRequired,
-  }),
+  }).isRequired,
 }
 
 export default DeactivateStaffDialog

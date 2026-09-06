@@ -280,16 +280,20 @@ function StaffListPage() {
 
       {isOwner && (
         <>
-          <StaffFormDialog
-            onClose={() => setFormOpen(false)}
-            open={formOpen}
-            staff={editingStaff}
-            users={usersQuery.data?.content ?? []}
-          />
-          <DeactivateStaffDialog
-            onClose={() => setStaffToDeactivate(null)}
-            staff={staffToDeactivate}
-          />
+          {formOpen && (
+            <StaffFormDialog
+              onClose={() => setFormOpen(false)}
+              open
+              staff={editingStaff}
+              users={usersQuery.data?.content ?? []}
+            />
+          )}
+          {staffToDeactivate && (
+            <DeactivateStaffDialog
+              onClose={() => setStaffToDeactivate(null)}
+              staff={staffToDeactivate}
+            />
+          )}
         </>
       )}
     </Stack>

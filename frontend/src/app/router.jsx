@@ -1,12 +1,15 @@
 import { createBrowserRouter, Navigate } from 'react-router-dom'
 
-import LoginPage from '../auth/pages/LoginPage.jsx'
-import RegisterPage from '../auth/pages/RegisterPage.jsx'
 import AppLayout from '../layout/AppLayout.jsx'
 import ProtectedRoute from '../layout/ProtectedRoute.jsx'
 import PlaceholderPage from '../shared/components/PlaceholderPage.jsx'
-import StaffListPage from '../staff/pages/StaffListPage.jsx'
 import HomeRedirect from './HomeRedirect.jsx'
+import {
+  LoginPage,
+  RegisterPage,
+  ServiceListPage,
+  StaffListPage,
+} from './lazyPages.jsx'
 
 export const router = createBrowserRouter([
   {
@@ -73,12 +76,7 @@ export const router = createBrowserRouter([
           },
           {
             path: 'services',
-            element: (
-              <PlaceholderPage
-                description="Browse the services available for booking."
-                title="Services"
-              />
-            ),
+            element: <ServiceListPage />,
           },
           {
             path: '*',
