@@ -1,5 +1,6 @@
 package com.bookflow.backend.appointment;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.Optional;
 
@@ -29,6 +30,31 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
 			Long tenantId,
 			Long customerId,
 			Pageable pageable);
+
+	long countByTenantIdAndStartTimeGreaterThanEqualAndStartTimeLessThan(
+			Long tenantId,
+			Instant fromTime,
+			Instant toTime);
+
+	long countByTenantIdAndStatusAndStartTimeGreaterThanEqualAndStartTimeLessThan(
+			Long tenantId,
+			AppointmentStatus status,
+			Instant fromTime,
+			Instant toTime);
+
+	@Query("""
+			SELECT COALESCE(SUM(appointment.service.price), 0)
+			FROM Appointment appointment
+			WHERE appointment.tenant.id = :tenantId
+			  AND appointment.status = :status
+			  AND appointment.startTime >= :fromTime
+			  AND appointment.startTime < :toTime
+			""")
+	BigDecimal sumServiceRevenueByTenantIdAndStatusAndPeriod(
+			@Param("tenantId") Long tenantId,
+			@Param("status") AppointmentStatus status,
+			@Param("fromTime") Instant fromTime,
+			@Param("toTime") Instant toTime);
 
 	@EntityGraph(attributePaths = {"customer", "staff", "service"})
 	@Query("""
