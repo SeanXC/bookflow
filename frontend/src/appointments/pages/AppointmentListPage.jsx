@@ -1,5 +1,7 @@
 import { useMemo, useState } from 'react'
+import AddIcon from '@mui/icons-material/Add'
 import ClearIcon from '@mui/icons-material/Clear'
+import EditOutlinedIcon from '@mui/icons-material/EditOutlined'
 import {
   Alert,
   Box,
@@ -19,6 +21,7 @@ import { DataGrid } from '@mui/x-data-grid'
 import { useAuth } from '../../auth/context/useAuth.js'
 import { useStaff } from '../../staff/api/staffQueries.js'
 import { useAppointments } from '../api/appointmentQueries.js'
+import AppointmentFormDialog from '../components/AppointmentFormDialog.jsx'
 
 const INITIAL_PAGINATION = {
   page: 0,
@@ -60,6 +63,8 @@ function toUtcInstant(value) {
 
 function AppointmentListPage() {
   const { user } = useAuth()
+  const canManageAppointments =
+    user?.role === 'OWNER' || user?.role === 'RECEPTIONIST'
   const canFilterByStaff = user?.role !== 'STAFF'
   const [staffId, setStaffId] = useState('all')
   const [status, setStatus] = useState('all')
@@ -67,6 +72,10 @@ function AppointmentListPage() {
   const [to, setTo] = useState('')
   const [paginationModel, setPaginationModel] = useState(INITIAL_PAGINATION)
   const [sortModel, setSortModel] = useState(INITIAL_SORT)
+  const [formOpen, setFormOpen] = useState(false)
+  const [editingAppointment, setEditingAppointment] = useState(
+    /** @type {import('../types.js').Appointment | null} */ (null),
+  )
 
   const staffQuery = useStaff(
     {
@@ -93,8 +102,8 @@ function AppointmentListPage() {
   /** @type {import('@mui/x-data-grid').GridColDef<
    *   import('../types.js').Appointment>[]}
    */
-  const columns = useMemo(
-    () => [
+  const columns = useMemo(() => {
+    const baseColumns = [
       {
         field: 'startTime',
         headerName: 'Starts',
@@ -154,9 +163,33 @@ function AppointmentListPage() {
           />
         ),
       },
-    ],
-    [],
-  )
+    ]
+
+    if (canManageAppointments) {
+      baseColumns.push({
+        field: 'actions',
+        headerName: 'Actions',
+        minWidth: 110,
+        sortable: false,
+        filterable: false,
+        renderCell: (params) =>
+          params.row.status === 'CONFIRMED' ? (
+            <Button
+              onClick={() => {
+                setEditingAppointment(params.row)
+                setFormOpen(true)
+              }}
+              size="small"
+              startIcon={<EditOutlinedIcon />}
+            >
+              Edit
+            </Button>
+          ) : null,
+      })
+    }
+
+    return baseColumns
+  }, [canManageAppointments])
 
   function resetToFirstPage() {
     setPaginationModel((current) => ({ ...current, page: 0 }))
@@ -178,13 +211,36 @@ function AppointmentListPage() {
 
   return (
     <Stack spacing={3}>
-      <Box>
-        <Typography component="h1" fontWeight={800} variant="h4">
-          Appointments
-        </Typography>
-        <Typography color="text.secondary" mt={0.75}>
-          Review the appointment schedule. Times are shown in your local time.
-        </Typography>
+      <Box
+        sx={{
+          alignItems: { sm: 'center' },
+          display: 'flex',
+          flexDirection: { xs: 'column', sm: 'row' },
+          gap: 2,
+          justifyContent: 'space-between',
+        }}
+      >
+        <div>
+          <Typography component="h1" fontWeight={800} variant="h4">
+            Appointments
+          </Typography>
+          <Typography color="text.secondary" mt={0.75}>
+            Review the appointment schedule. Times are shown in your local
+            time.
+          </Typography>
+        </div>
+        {canManageAppointments && (
+          <Button
+            onClick={() => {
+              setEditingAppointment(null)
+              setFormOpen(true)
+            }}
+            startIcon={<AddIcon />}
+            variant="contained"
+          >
+            Create appointment
+          </Button>
+        )}
       </Box>
 
       {canFilterByStaff && staffQuery.isError && (
@@ -310,6 +366,14 @@ function AppointmentListPage() {
           />
         )}
       </Paper>
+
+      {canManageAppointments && formOpen && (
+        <AppointmentFormDialog
+          appointment={editingAppointment}
+          onClose={() => setFormOpen(false)}
+          open
+        />
+      )}
     </Stack>
   )
 }
