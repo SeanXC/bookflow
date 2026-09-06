@@ -11,13 +11,24 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import com.bookflow.backend.common.exception.AppointmentConflictException;
 import com.bookflow.backend.common.exception.DuplicateResourceException;
+import com.bookflow.backend.common.exception.InvalidOperationException;
 import com.bookflow.backend.common.exception.ResourceNotFoundException;
 
 import jakarta.validation.ConstraintViolationException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+	@ExceptionHandler(AppointmentConflictException.class)
+	public ResponseEntity<ApiErrorResponse> handleAppointmentConflict(
+			AppointmentConflictException exception) {
+		return buildResponse(
+				HttpStatus.CONFLICT,
+				"BOOKING_CONFLICT",
+				exception.getMessage());
+	}
 
 	@ExceptionHandler(ResourceNotFoundException.class)
 	public ResponseEntity<ApiErrorResponse> handleResourceNotFound(
@@ -34,6 +45,15 @@ public class GlobalExceptionHandler {
 		return buildResponse(
 				HttpStatus.CONFLICT,
 				"DUPLICATE_RESOURCE",
+				exception.getMessage());
+	}
+
+	@ExceptionHandler(InvalidOperationException.class)
+	public ResponseEntity<ApiErrorResponse> handleInvalidOperation(
+			InvalidOperationException exception) {
+		return buildResponse(
+				HttpStatus.BAD_REQUEST,
+				"INVALID_OPERATION",
 				exception.getMessage());
 	}
 
