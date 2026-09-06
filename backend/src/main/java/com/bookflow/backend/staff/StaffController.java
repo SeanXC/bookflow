@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.bookflow.backend.security.CurrentUserProvider;
@@ -29,8 +30,15 @@ public class StaffController {
 	private final CurrentUserProvider currentUserProvider;
 
 	@GetMapping
-	public Page<StaffResponse> getAllStaff(Pageable pageable) {
-		return staffService.getAllStaff(currentUserProvider.getTenantId(), pageable)
+	public Page<StaffResponse> getAllStaff(
+			@RequestParam(required = false) String search,
+			@RequestParam(required = false) Boolean active,
+			Pageable pageable) {
+		return staffService.getAllStaff(
+					currentUserProvider.getTenantId(),
+					search,
+					active,
+					pageable)
 				.map(StaffResponse::from);
 	}
 

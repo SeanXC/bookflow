@@ -19,6 +19,31 @@ public interface StaffRepository extends JpaRepository<Staff, Long> {
 
 	Page<Staff> findAllByTenantId(Long tenantId, Pageable pageable);
 
+	@Query("""
+			SELECT staff
+			FROM Staff staff
+			WHERE staff.tenant.id = :tenantId
+			  AND (:active IS NULL OR staff.active = :active)
+			  AND (
+				LOWER(staff.firstName)
+					LIKE LOWER(CONCAT('%', :search, '%')) ESCAPE '!'
+				OR LOWER(staff.lastName)
+					LIKE LOWER(CONCAT('%', :search, '%')) ESCAPE '!'
+				OR LOWER(CONCAT(CONCAT(staff.firstName, ' '), staff.lastName))
+					LIKE LOWER(CONCAT('%', :search, '%')) ESCAPE '!'
+			  )
+			""")
+	Page<Staff> searchByTenantId(
+			@Param("tenantId") Long tenantId,
+			@Param("search") String search,
+			@Param("active") Boolean active,
+			Pageable pageable);
+
+	Page<Staff> findAllByTenantIdAndActive(
+			Long tenantId,
+			boolean active,
+			Pageable pageable);
+
 	@Lock(LockModeType.PESSIMISTIC_WRITE)
 	@Query("""
 			SELECT staff
