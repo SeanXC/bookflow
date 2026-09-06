@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.time.LocalDate;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,8 +19,10 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.bookflow.backend.appointment.Appointment;
 import com.bookflow.backend.appointment.AppointmentRepository;
+import com.bookflow.backend.appointment.AppointmentStatus;
 import com.bookflow.backend.customer.Customer;
 import com.bookflow.backend.customer.CustomerRepository;
+import com.bookflow.backend.dashboard.DashboardRepository;
 import com.bookflow.backend.service.ServiceRepository;
 import com.bookflow.backend.staff.Staff;
 import com.bookflow.backend.staff.StaffRepository;
@@ -46,6 +49,9 @@ class PersistenceIntegrationTest {
 
 	@Autowired
 	private CustomerRepository customerRepository;
+
+	@Autowired
+	private DashboardRepository dashboardRepository;
 
 	@Autowired
 	private StaffRepository staffRepository;
@@ -145,6 +151,78 @@ class PersistenceIntegrationTest {
 		assertEquals("Emma", loaded.getCustomer().getFirstName());
 		assertEquals("Anna", loaded.getStaff().getFirstName());
 		assertEquals("Haircut", loaded.getService().getName());
+	}
+
+	@Test
+	void dashboardAggregatesRemainTenantScoped() {
+		Tenant tenantA = saveTenant("Studio A", "dashboard-a@example.com");
+		Tenant tenantB = saveTenant("Studio B", "dashboard-b@example.com");
+		Appointment completed = saveAppointment(
+				tenantA,
+				"Emma",
+				"Anna",
+				"Haircut",
+				Instant.parse("2026-09-06T10:00:00Z"));
+		completed.updateStatus(AppointmentStatus.COMPLETED);
+		Appointment cancelled = saveAppointment(
+				tenantA,
+				"Olivia",
+				"Sophie",
+				"Colour",
+				Instant.parse("2026-09-07T10:00:00Z"));
+		cancelled.updateStatus(AppointmentStatus.CANCELLED);
+		Appointment otherTenant = saveAppointment(
+				tenantB,
+				"Isla",
+				"Grace",
+				"Treatment",
+				Instant.parse("2026-09-06T10:00:00Z"));
+		otherTenant.updateStatus(AppointmentStatus.COMPLETED);
+		appointmentRepository.flush();
+
+		Instant monthStart = Instant.parse("2026-09-01T00:00:00Z");
+		Instant nextMonthStart = Instant.parse("2026-10-01T00:00:00Z");
+
+		assertEquals(
+				2L,
+				appointmentRepository
+						.countByTenantIdAndStartTimeGreaterThanEqualAndStartTimeLessThan(
+								tenantA.getId(),
+								monthStart,
+								nextMonthStart));
+		assertEquals(
+				1L,
+				appointmentRepository
+						.countByTenantIdAndStatusAndStartTimeGreaterThanEqualAndStartTimeLessThan(
+								tenantA.getId(),
+								AppointmentStatus.CANCELLED,
+								monthStart,
+								nextMonthStart));
+		assertEquals(
+				new BigDecimal("30.00"),
+				appointmentRepository.sumServiceRevenueByTenantIdAndStatusAndPeriod(
+						tenantA.getId(),
+						AppointmentStatus.COMPLETED,
+						monthStart,
+						nextMonthStart));
+		assertEquals(2L, customerRepository.countByTenantId(tenantA.getId()));
+
+		var dailyBookings = dashboardRepository.findDailyBookingsForWeek(
+				tenantA.getId(),
+				LocalDate.parse("2026-09-01"),
+				"UTC");
+		assertEquals(7, dailyBookings.size());
+		assertEquals(1L, dailyBookings.get(5).getBookings());
+		assertEquals(1L, dailyBookings.get(6).getBookings());
+
+		var monthlyRevenue = dashboardRepository.findMonthlyRevenue(
+				tenantA.getId(),
+				LocalDate.parse("2025-10-01"),
+				"UTC");
+		assertEquals(12, monthlyRevenue.size());
+		assertEquals(
+				new BigDecimal("30.00"),
+				monthlyRevenue.get(11).getRevenue());
 	}
 
 	@Test

@@ -182,6 +182,30 @@ class AuthenticationIntegrationTest {
 	}
 
 	@Test
+	void ownerCanViewTenantDashboardSummary() throws Exception {
+		String token = registerOwner("dashboard-owner@example.com").accessToken();
+
+		mockMvc.perform(get("/api/dashboard/summary")
+				.header(HttpHeaders.AUTHORIZATION, bearer(token)))
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.todayAppointments").value(0))
+			.andExpect(jsonPath("$.monthlyRevenue").value(0))
+			.andExpect(jsonPath("$.activeCustomers").value(0))
+			.andExpect(jsonPath("$.cancellationRate").value(0.00))
+			.andExpect(jsonPath("$.businessTimeZone").value("UTC"));
+	}
+
+	@Test
+	void staffCannotViewDashboardSummary() throws Exception {
+		String token = createTokenForRole("dashboard-staff@example.com", Role.STAFF);
+
+		mockMvc.perform(get("/api/dashboard/summary")
+				.header(HttpHeaders.AUTHORIZATION, bearer(token)))
+			.andExpect(status().isForbidden())
+			.andExpect(jsonPath("$.error").value("FORBIDDEN"));
+	}
+
+	@Test
 	void tenantOwnerCannotReadAnotherTenantsCustomer() throws Exception {
 		String tenantAToken = registerOwner("tenant-a-owner@example.com").accessToken();
 		Tenant tenantB = tenantRepository.saveAndFlush(new Tenant(
