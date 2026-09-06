@@ -1,5 +1,8 @@
 import { lazy } from 'react'
 
+export const AppointmentListPage = lazy(
+  () => import('../appointments/pages/AppointmentListPage.jsx'),
+)
 export const CustomerListPage = lazy(
   () => import('../customers/pages/CustomerListPage.jsx'),
 )

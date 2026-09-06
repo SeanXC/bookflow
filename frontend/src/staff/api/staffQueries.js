@@ -10,9 +10,11 @@ export const staffKeys = {
 
 /**
  * @param {Parameters<typeof getStaff>[0]} options
+ * @param {boolean} [enabled]
  */
-export function useStaff(options) {
+export function useStaff(options, enabled = true) {
   return useQuery({
+    enabled,
     queryKey: staffKeys.list(options),
     queryFn: () => getStaff(options),
     placeholderData: keepPreviousData,
