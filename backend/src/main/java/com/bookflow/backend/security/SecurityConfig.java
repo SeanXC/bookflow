@@ -3,6 +3,9 @@ package com.bookflow.backend.security;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.ProviderManager;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -38,5 +41,14 @@ public class SecurityConfig {
 	@Bean
 	public PasswordEncoder passwordEncoder() {
 		return new BCryptPasswordEncoder();
+	}
+
+	@Bean
+	public AuthenticationManager authenticationManager(
+			BookFlowUserDetailsService userDetailsService,
+			PasswordEncoder passwordEncoder) {
+		DaoAuthenticationProvider provider = new DaoAuthenticationProvider(userDetailsService);
+		provider.setPasswordEncoder(passwordEncoder);
+		return new ProviderManager(provider);
 	}
 }
