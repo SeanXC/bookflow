@@ -25,3 +25,30 @@ export async function getServices(options) {
   })
   return response.data
 }
+
+/**
+ * @param {import('../types.js').ServiceRequest} request
+ * @returns {Promise<import('../types.js').ServiceItem>}
+ */
+export async function createService(request) {
+  const response = await httpClient.post('/api/services', request)
+  return response.data
+}
+
+/**
+ * @param {number} serviceId
+ * @param {import('../types.js').ServiceRequest} request
+ * @returns {Promise<import('../types.js').ServiceItem>}
+ */
+export async function updateService(serviceId, request) {
+  const response = await httpClient.put(`/api/services/${serviceId}`, request)
+  return response.data
+}
+
+/**
+ * @param {number} serviceId
+ * @returns {Promise<void>}
+ */
+export async function deactivateService(serviceId) {
+  await httpClient.delete(`/api/services/${serviceId}`)
+}
