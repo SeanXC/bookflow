@@ -5,6 +5,7 @@ import RegisterPage from '../auth/pages/RegisterPage.jsx'
 import AppLayout from '../layout/AppLayout.jsx'
 import ProtectedRoute from '../layout/ProtectedRoute.jsx'
 import PlaceholderPage from '../shared/components/PlaceholderPage.jsx'
+import StaffListPage from '../staff/pages/StaffListPage.jsx'
 import HomeRedirect from './HomeRedirect.jsx'
 
 export const router = createBrowserRouter([
@@ -66,12 +67,7 @@ export const router = createBrowserRouter([
               },
               {
                 path: 'staff',
-                element: (
-                  <PlaceholderPage
-                    description="Review staff profiles and account links."
-                    title="Staff"
-                  />
-                ),
+                element: <StaffListPage />,
               },
             ],
           },
