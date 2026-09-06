@@ -6,13 +6,19 @@ import {
   Stack,
   TextField,
 } from '@mui/material'
-import { Link as RouterLink, Navigate, useNavigate } from 'react-router-dom'
+import {
+  Link as RouterLink,
+  Navigate,
+  useLocation,
+  useNavigate,
+} from 'react-router-dom'
 
 import AuthPageLayout from '../components/AuthPageLayout.jsx'
 import { useAuth } from '../context/useAuth.js'
 
 function LoginPage() {
   const { isAuthenticated, login } = useAuth()
+  const location = useLocation()
   const navigate = useNavigate()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -36,7 +42,11 @@ function LoginPage() {
         email: email.trim().toLowerCase(),
         password,
       })
-      navigate('/', { replace: true })
+      const destination =
+        typeof location.state?.from?.pathname === 'string'
+          ? location.state.from.pathname
+          : '/'
+      navigate(destination, { replace: true })
     } catch (error) {
       setErrorMessage(
         error instanceof Error ? error.message : 'Unable to sign in.',
