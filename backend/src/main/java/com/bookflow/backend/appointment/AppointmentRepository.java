@@ -35,10 +35,10 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
 			SELECT appointment
 			FROM Appointment appointment
 			WHERE appointment.tenant.id = :tenantId
-			  AND (:staffId IS NULL OR appointment.staff.id = :staffId)
-			  AND (:status IS NULL OR appointment.status = :status)
-			  AND (:fromTime IS NULL OR appointment.startTime >= :fromTime)
-			  AND (:toTime IS NULL OR appointment.startTime <= :toTime)
+			  AND appointment.staff.id = COALESCE(:staffId, appointment.staff.id)
+			  AND appointment.status = COALESCE(:status, appointment.status)
+			  AND appointment.startTime >= COALESCE(:fromTime, appointment.startTime)
+			  AND appointment.startTime <= COALESCE(:toTime, appointment.startTime)
 			""")
 	Page<Appointment> findAllByTenantIdAndFilters(
 			@Param("tenantId") Long tenantId,
@@ -54,9 +54,9 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
 			FROM Appointment appointment
 			WHERE appointment.tenant.id = :tenantId
 			  AND appointment.staff.user.id = :userId
-			  AND (:status IS NULL OR appointment.status = :status)
-			  AND (:fromTime IS NULL OR appointment.startTime >= :fromTime)
-			  AND (:toTime IS NULL OR appointment.startTime <= :toTime)
+			  AND appointment.status = COALESCE(:status, appointment.status)
+			  AND appointment.startTime >= COALESCE(:fromTime, appointment.startTime)
+			  AND appointment.startTime <= COALESCE(:toTime, appointment.startTime)
 			""")
 	Page<Appointment> findAllByTenantIdAndStaffUserIdAndFilters(
 			@Param("tenantId") Long tenantId,
