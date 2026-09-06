@@ -27,3 +27,24 @@ export function getManagedUsers() {
     sortModel: [{ field: 'email', sort: 'asc' }],
   })
 }
+
+/**
+ * @param {import('../types.js').ManagedUserRequest} request
+ * @returns {Promise<import('../types.js').ManagedUser>}
+ */
+export async function createUser(request) {
+  const response = await httpClient.post('/api/users', request)
+  return response.data
+}
+
+/**
+ * @param {number} userId
+ * @param {boolean} enabled
+ * @returns {Promise<import('../types.js').ManagedUser>}
+ */
+export async function updateUserEnabled(userId, enabled) {
+  const response = await httpClient.patch(`/api/users/${userId}/enabled`, {
+    enabled,
+  })
+  return response.data
+}

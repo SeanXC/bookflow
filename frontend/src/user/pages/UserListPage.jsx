@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import AddIcon from '@mui/icons-material/Add'
 import {
   Alert,
   Box,
@@ -11,6 +12,8 @@ import {
 import { DataGrid } from '@mui/x-data-grid'
 
 import { useUsers } from '../api/userQueries.js'
+import UserEnabledDialog from '../components/UserEnabledDialog.jsx'
+import UserFormDialog from '../components/UserFormDialog.jsx'
 
 const INITIAL_PAGINATION = {
   page: 0,
@@ -31,6 +34,10 @@ const dateFormatter = new Intl.DateTimeFormat('en-IE', {
 function UserListPage() {
   const [paginationModel, setPaginationModel] = useState(INITIAL_PAGINATION)
   const [sortModel, setSortModel] = useState(INITIAL_SORT)
+  const [formOpen, setFormOpen] = useState(false)
+  const [userToUpdate, setUserToUpdate] = useState(
+    /** @type {import('../types.js').ManagedUser | null} */ (null),
+  )
   const usersQuery = useUsers({
     page: paginationModel.page,
     pageSize: paginationModel.pageSize,
@@ -77,19 +84,53 @@ function UserListPage() {
         flex: 0.8,
         valueFormatter: (value) => dateFormatter.format(new Date(value)),
       },
+      {
+        field: 'actions',
+        headerName: 'Actions',
+        minWidth: 120,
+        sortable: false,
+        filterable: false,
+        renderCell: (params) =>
+          params.row.role === 'OWNER' ? null : (
+            <Button
+              color={params.row.enabled ? 'error' : 'primary'}
+              onClick={() => setUserToUpdate(params.row)}
+              size="small"
+            >
+              {params.row.enabled ? 'Disable' : 'Enable'}
+            </Button>
+          ),
+      },
     ],
     [],
   )
 
   return (
     <Stack spacing={3}>
-      <Box>
-        <Typography component="h1" fontWeight={800} variant="h4">
-          Users
-        </Typography>
-        <Typography color="text.secondary" mt={0.75}>
-          Manage Receptionist and Staff login accounts.
-        </Typography>
+      <Box
+        sx={{
+          alignItems: { sm: 'center' },
+          display: 'flex',
+          flexDirection: { xs: 'column', sm: 'row' },
+          gap: 2,
+          justifyContent: 'space-between',
+        }}
+      >
+        <div>
+          <Typography component="h1" fontWeight={800} variant="h4">
+            Users
+          </Typography>
+          <Typography color="text.secondary" mt={0.75}>
+            Manage Receptionist and Staff login accounts.
+          </Typography>
+        </div>
+        <Button
+          onClick={() => setFormOpen(true)}
+          startIcon={<AddIcon />}
+          variant="contained"
+        >
+          Create account
+        </Button>
       </Box>
 
       <Paper
@@ -132,6 +173,14 @@ function UserListPage() {
           />
         )}
       </Paper>
+
+      {formOpen && <UserFormDialog onClose={() => setFormOpen(false)} />}
+      {userToUpdate && (
+        <UserEnabledDialog
+          onClose={() => setUserToUpdate(null)}
+          user={userToUpdate}
+        />
+      )}
     </Stack>
   )
 }
