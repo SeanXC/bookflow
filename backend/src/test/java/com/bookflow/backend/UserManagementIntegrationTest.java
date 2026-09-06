@@ -133,6 +133,74 @@ class UserManagementIntegrationTest {
 			.andExpect(jsonPath("$.error").value("INVALID_OPERATION"));
 	}
 
+	@Test
+	void ownerCanLinkAStaffAccountOnlyOnce() throws Exception {
+		String ownerToken = registerOwner();
+		long userId = createManagedUser(ownerToken, "staff@example.com", "STAFF");
+
+		mockMvc.perform(post("/api/staff")
+				.header(HttpHeaders.AUTHORIZATION, bearer(ownerToken))
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(staffPayload(userId, "Anna")))
+			.andExpect(status().isCreated())
+			.andExpect(jsonPath("$.userId").value(userId));
+
+		mockMvc.perform(post("/api/staff")
+				.header(HttpHeaders.AUTHORIZATION, bearer(ownerToken))
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(staffPayload(userId, "Sophie")))
+			.andExpect(status().isConflict())
+			.andExpect(jsonPath("$.error").value("DUPLICATE_RESOURCE"));
+	}
+
+	@Test
+	void receptionistAccountCannotBeLinkedToAStaffRecord() throws Exception {
+		String ownerToken = registerOwner();
+		long userId = createManagedUser(
+				ownerToken,
+				"reception@example.com",
+				"RECEPTIONIST");
+
+		mockMvc.perform(post("/api/staff")
+				.header(HttpHeaders.AUTHORIZATION, bearer(ownerToken))
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(staffPayload(userId, "Anna")))
+			.andExpect(status().isBadRequest())
+			.andExpect(jsonPath("$.error").value("INVALID_OPERATION"));
+	}
+
+	private long createManagedUser(
+			String ownerToken,
+			String email,
+			String role) throws Exception {
+		MvcResult created = mockMvc.perform(post("/api/users")
+				.header(HttpHeaders.AUTHORIZATION, bearer(ownerToken))
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("""
+						{
+						  "email": "%s",
+						  "password": "password123",
+						  "role": "%s"
+						}
+						""".formatted(email, role)))
+			.andExpect(status().isCreated())
+			.andReturn();
+		return jsonMapper.readTree(created.getResponse().getContentAsString())
+				.get("id")
+				.asLong();
+	}
+
+	private String staffPayload(long userId, String firstName) {
+		return """
+				{
+				  "userId": %d,
+				  "firstName": "%s",
+				  "lastName": "Smith",
+				  "phone": "0871234567"
+				}
+				""".formatted(userId, firstName);
+	}
+
 	private String registerOwner() {
 		AuthResponse response = authService.register(new RegisterRequest(
 				"Glow Studio",
