@@ -69,4 +69,8 @@ public class User {
 		this.passwordHash = passwordHash;
 		this.role = role;
 	}
+
+	public void updateEnabled(boolean enabled) {
+		this.enabled = enabled;
+	}
 }

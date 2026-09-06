@@ -22,6 +22,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
+import com.bookflow.backend.common.exception.DuplicateResourceException;
+import com.bookflow.backend.common.exception.InvalidOperationException;
 import com.bookflow.backend.common.exception.ResourceNotFoundException;
 import com.bookflow.backend.tenant.Tenant;
 import com.bookflow.backend.tenant.TenantRepository;
@@ -62,7 +64,7 @@ class StaffServiceTest {
 		when(tenantRepository.findById(TENANT_ID)).thenReturn(Optional.of(tenant));
 		when(userRepository.findByIdAndTenantId(USER_ID, TENANT_ID))
 				.thenReturn(Optional.of(user));
-		when(staffRepository.save(any(Staff.class)))
+		when(staffRepository.saveAndFlush(any(Staff.class)))
 				.thenAnswer(invocation -> invocation.getArgument(0));
 
 		Staff staff = staffService.createStaff(
@@ -84,7 +86,7 @@ class StaffServiceTest {
 	void createStaffAllowsARecordWithoutLoginAccount() {
 		Tenant tenant = tenant();
 		when(tenantRepository.findById(TENANT_ID)).thenReturn(Optional.of(tenant));
-		when(staffRepository.save(any(Staff.class)))
+		when(staffRepository.saveAndFlush(any(Staff.class)))
 				.thenAnswer(invocation -> invocation.getArgument(0));
 
 		Staff staff = staffService.createStaff(
@@ -114,7 +116,55 @@ class StaffServiceTest {
 						"Smith",
 						null));
 
-		verify(staffRepository, never()).save(any(Staff.class));
+		verify(staffRepository, never()).saveAndFlush(any(Staff.class));
+	}
+
+	@Test
+	void createStaffRejectsAReceptionistAccountLink() {
+		Tenant tenant = tenant();
+		User receptionist = new User(
+				tenant,
+				"reception@example.com",
+				"encoded-password",
+				Role.RECEPTIONIST);
+		when(tenantRepository.findById(TENANT_ID)).thenReturn(Optional.of(tenant));
+		when(userRepository.findByIdAndTenantId(USER_ID, TENANT_ID))
+				.thenReturn(Optional.of(receptionist));
+
+		assertThrows(
+				InvalidOperationException.class,
+				() -> staffService.createStaff(
+						TENANT_ID,
+						USER_ID,
+						"Anna",
+						"Smith",
+						null));
+
+		verify(staffRepository, never()).saveAndFlush(any(Staff.class));
+	}
+
+	@Test
+	void createStaffRejectsAnAccountAlreadyLinkedToAnotherStaffMember() {
+		Tenant tenant = tenant();
+		User user = staffUser(tenant);
+		Staff linkedStaff = org.mockito.Mockito.mock(Staff.class);
+		when(linkedStaff.getId()).thenReturn(99L);
+		when(tenantRepository.findById(TENANT_ID)).thenReturn(Optional.of(tenant));
+		when(userRepository.findByIdAndTenantId(USER_ID, TENANT_ID))
+				.thenReturn(Optional.of(user));
+		when(staffRepository.findByUserIdAndTenantId(USER_ID, TENANT_ID))
+				.thenReturn(Optional.of(linkedStaff));
+
+		assertThrows(
+				DuplicateResourceException.class,
+				() -> staffService.createStaff(
+						TENANT_ID,
+						USER_ID,
+						"Anna",
+						"Smith",
+						null));
+
+		verify(staffRepository, never()).saveAndFlush(any(Staff.class));
 	}
 
 	@Test
