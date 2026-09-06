@@ -15,6 +15,8 @@ import {
 import PropTypes from 'prop-types'
 
 import { useDashboardSummary } from '../api/dashboardQueries.js'
+import DashboardCharts from '../components/DashboardCharts.jsx'
+import RecentAppointments from '../components/RecentAppointments.jsx'
 
 const currencyFormatter = new Intl.NumberFormat('en-IE', {
   style: 'currency',
@@ -168,6 +170,8 @@ function DashboardPage() {
           value={`${numberFormatter.format(summary?.cancellationRate ?? 0)}%`}
         />
       </Box>
+      <DashboardCharts />
+      <RecentAppointments />
     </Stack>
   )
 }
