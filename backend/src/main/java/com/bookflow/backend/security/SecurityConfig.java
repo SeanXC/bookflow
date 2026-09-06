@@ -39,7 +39,13 @@ public class SecurityConfig {
 					.authenticationEntryPoint(authenticationEntryPoint)
 					.accessDeniedHandler(accessDeniedHandler))
 			.authorizeHttpRequests(authorize -> authorize
-				.requestMatchers("/api/auth/**", "/error").permitAll()
+				.requestMatchers(
+						"/api/auth/**",
+						"/api/docs",
+						"/api/docs/**",
+						"/swagger-ui/**",
+						"/error")
+					.permitAll()
 				.anyRequest().authenticated());
 
 		return http.build();
