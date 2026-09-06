@@ -1,11 +1,17 @@
 import { createBrowserRouter, Navigate } from 'react-router-dom'
 
-import LoginPage from '../auth/pages/LoginPage.jsx'
-import RegisterPage from '../auth/pages/RegisterPage.jsx'
 import AppLayout from '../layout/AppLayout.jsx'
 import ProtectedRoute from '../layout/ProtectedRoute.jsx'
 import PlaceholderPage from '../shared/components/PlaceholderPage.jsx'
 import HomeRedirect from './HomeRedirect.jsx'
+import {
+  CustomerDetailPage,
+  CustomerListPage,
+  LoginPage,
+  RegisterPage,
+  ServiceListPage,
+  StaffListPage,
+} from './lazyPages.jsx'
 
 export const router = createBrowserRouter([
   {
@@ -57,32 +63,21 @@ export const router = createBrowserRouter([
             children: [
               {
                 path: 'customers',
-                element: (
-                  <PlaceholderPage
-                    description="Maintain customer details and appointment history."
-                    title="Customers"
-                  />
-                ),
+                element: <CustomerListPage />,
+              },
+              {
+                path: 'customers/:customerId',
+                element: <CustomerDetailPage />,
               },
               {
                 path: 'staff',
-                element: (
-                  <PlaceholderPage
-                    description="Review staff profiles and account links."
-                    title="Staff"
-                  />
-                ),
+                element: <StaffListPage />,
               },
             ],
           },
           {
             path: 'services',
-            element: (
-              <PlaceholderPage
-                description="Browse the services available for booking."
-                title="Services"
-              />
-            ),
+            element: <ServiceListPage />,
           },
           {
             path: '*',
