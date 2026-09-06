@@ -8,6 +8,7 @@ import {
   AppointmentListPage,
   CustomerDetailPage,
   CustomerListPage,
+  DashboardPage,
   LoginPage,
   RegisterPage,
   ServiceListPage,
@@ -30,12 +31,7 @@ export const router = createBrowserRouter([
             children: [
               {
                 path: 'dashboard',
-                element: (
-                  <PlaceholderPage
-                    description="Monitor bookings, revenue, customers, and cancellations."
-                    title="Dashboard"
-                  />
-                ),
+                element: <DashboardPage />,
               },
               {
                 path: 'users',
