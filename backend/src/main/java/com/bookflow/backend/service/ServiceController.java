@@ -1,6 +1,5 @@
 package com.bookflow.backend.service;
 
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
@@ -15,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.bookflow.backend.common.dto.PageResponse;
 import com.bookflow.backend.common.error.ApiErrorResponse;
 import com.bookflow.backend.security.CurrentUserProvider;
 import com.bookflow.backend.service.dto.ServiceRequest;
@@ -51,7 +51,7 @@ public class ServiceController {
 
 	@GetMapping
 	@Operation(summary = "List and search services")
-	public Page<ServiceResponse> getAllServices(
+	public PageResponse<ServiceResponse> getAllServices(
 			@Parameter(description = "Case-insensitive service name or description search")
 			@RequestParam(required = false) String search,
 			@Parameter(description = "Filter by active or inactive status")
@@ -59,13 +59,13 @@ public class ServiceController {
 			@PageableDefault(
 				size = 20,
 				sort = {"name", "id"}) Pageable pageable) {
-		return serviceManagementService
+		return PageResponse.from(serviceManagementService
 				.getAllServices(
 						currentUserProvider.getTenantId(),
 						search,
 						active,
 						pageable)
-				.map(ServiceResponse::from);
+				.map(ServiceResponse::from));
 	}
 
 	@GetMapping("/{serviceId}")

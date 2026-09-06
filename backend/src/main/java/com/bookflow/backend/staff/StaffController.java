@@ -1,6 +1,5 @@
 package com.bookflow.backend.staff;
 
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
@@ -15,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.bookflow.backend.common.dto.PageResponse;
 import com.bookflow.backend.common.error.ApiErrorResponse;
 import com.bookflow.backend.security.CurrentUserProvider;
 import com.bookflow.backend.staff.dto.StaffRequest;
@@ -51,7 +51,7 @@ public class StaffController {
 
 	@GetMapping
 	@Operation(summary = "List and search staff")
-	public Page<StaffResponse> getAllStaff(
+	public PageResponse<StaffResponse> getAllStaff(
 			@Parameter(description = "Case-insensitive first, last, or full name search")
 			@RequestParam(required = false) String search,
 			@Parameter(description = "Filter by active or inactive status")
@@ -59,12 +59,12 @@ public class StaffController {
 			@PageableDefault(
 				size = 20,
 				sort = {"lastName", "firstName", "id"}) Pageable pageable) {
-		return staffService.getAllStaff(
+		return PageResponse.from(staffService.getAllStaff(
 					currentUserProvider.getTenantId(),
 					search,
 					active,
 					pageable)
-				.map(StaffResponse::from);
+				.map(StaffResponse::from));
 	}
 
 	@GetMapping("/{staffId}")
