@@ -9,6 +9,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.bookflow.backend.common.exception.AppointmentConflictException;
 import com.bookflow.backend.common.exception.InvalidOperationException;
 import com.bookflow.backend.common.exception.ResourceNotFoundException;
 import com.bookflow.backend.customer.Customer;
@@ -58,7 +59,7 @@ public class AppointmentService {
 				.orElseThrow(() -> new ResourceNotFoundException("Tenant", tenantId));
 		Customer customer = customerRepository.findByIdAndTenantId(customerId, tenantId)
 				.orElseThrow(() -> new ResourceNotFoundException("Customer", customerId));
-		Staff staff = staffRepository.findByIdAndTenantId(staffId, tenantId)
+		Staff staff = staffRepository.findForUpdateByIdAndTenantId(staffId, tenantId)
 				.orElseThrow(() -> new ResourceNotFoundException("Staff", staffId));
 		com.bookflow.backend.service.Service service = serviceRepository
 				.findByIdAndTenantId(serviceId, tenantId)
@@ -72,6 +73,16 @@ public class AppointmentService {
 		}
 
 		Instant endTime = startTime.plus(service.getDurationMinutes(), ChronoUnit.MINUTES);
+		long conflicts = appointmentRepository.countConflictingAppointments(
+				tenantId,
+				staffId,
+				AppointmentStatus.CANCELLED,
+				startTime,
+				endTime);
+		if (conflicts > 0) {
+			throw new AppointmentConflictException();
+		}
+
 		return appointmentRepository.save(new Appointment(
 				tenant,
 				customer,
