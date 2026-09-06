@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.time.LocalDate;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,6 +22,7 @@ import com.bookflow.backend.appointment.AppointmentRepository;
 import com.bookflow.backend.appointment.AppointmentStatus;
 import com.bookflow.backend.customer.Customer;
 import com.bookflow.backend.customer.CustomerRepository;
+import com.bookflow.backend.dashboard.DashboardRepository;
 import com.bookflow.backend.service.ServiceRepository;
 import com.bookflow.backend.staff.Staff;
 import com.bookflow.backend.staff.StaffRepository;
@@ -47,6 +49,9 @@ class PersistenceIntegrationTest {
 
 	@Autowired
 	private CustomerRepository customerRepository;
+
+	@Autowired
+	private DashboardRepository dashboardRepository;
 
 	@Autowired
 	private StaffRepository staffRepository;
@@ -201,6 +206,23 @@ class PersistenceIntegrationTest {
 						monthStart,
 						nextMonthStart));
 		assertEquals(2L, customerRepository.countByTenantId(tenantA.getId()));
+
+		var dailyBookings = dashboardRepository.findDailyBookingsForWeek(
+				tenantA.getId(),
+				LocalDate.parse("2026-09-01"),
+				"UTC");
+		assertEquals(7, dailyBookings.size());
+		assertEquals(1L, dailyBookings.get(5).getBookings());
+		assertEquals(1L, dailyBookings.get(6).getBookings());
+
+		var monthlyRevenue = dashboardRepository.findMonthlyRevenue(
+				tenantA.getId(),
+				LocalDate.parse("2025-10-01"),
+				"UTC");
+		assertEquals(12, monthlyRevenue.size());
+		assertEquals(
+				new BigDecimal("30.00"),
+				monthlyRevenue.get(11).getRevenue());
 	}
 
 	@Test
