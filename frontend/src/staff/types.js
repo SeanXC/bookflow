@@ -8,4 +8,12 @@
  * @property {boolean} active
  */
 
+/**
+ * @typedef {object} StaffRequest
+ * @property {number | null} userId
+ * @property {string} firstName
+ * @property {string} lastName
+ * @property {string | null} phone
+ */
+
 export {}
