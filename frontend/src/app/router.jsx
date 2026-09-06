@@ -2,7 +2,6 @@ import { createBrowserRouter, Navigate } from 'react-router-dom'
 
 import AppLayout from '../layout/AppLayout.jsx'
 import ProtectedRoute from '../layout/ProtectedRoute.jsx'
-import PlaceholderPage from '../shared/components/PlaceholderPage.jsx'
 import HomeRedirect from './HomeRedirect.jsx'
 import {
   AppointmentListPage,
@@ -13,6 +12,7 @@ import {
   RegisterPage,
   ServiceListPage,
   StaffListPage,
+  UserListPage,
 } from './lazyPages.jsx'
 
 export const router = createBrowserRouter([
@@ -35,12 +35,7 @@ export const router = createBrowserRouter([
               },
               {
                 path: 'users',
-                element: (
-                  <PlaceholderPage
-                    description="Manage Receptionist and Staff login accounts."
-                    title="Users"
-                  />
-                ),
+                element: <UserListPage />,
               },
             ],
           },

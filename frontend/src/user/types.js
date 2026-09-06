@@ -7,4 +7,11 @@
  * @property {string} createdAt
  */
 
+/**
+ * @typedef {object} ManagedUserRequest
+ * @property {string} email
+ * @property {string} password
+ * @property {'RECEPTIONIST' | 'STAFF'} role
+ */
+
 export {}
