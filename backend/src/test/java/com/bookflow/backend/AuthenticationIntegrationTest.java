@@ -1,7 +1,9 @@
 package com.bookflow.backend;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.options;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -140,6 +142,30 @@ class AuthenticationIntegrationTest {
 			.andExpect(status().isUnauthorized())
 			.andExpect(jsonPath("$.status").value(401))
 			.andExpect(jsonPath("$.error").value("UNAUTHORIZED"));
+	}
+
+	@Test
+	void configuredFrontendOriginCanCompleteCorsPreflight() throws Exception {
+		mockMvc.perform(options("/api/services")
+				.header(HttpHeaders.ORIGIN, "http://localhost:5173")
+				.header(HttpHeaders.ACCESS_CONTROL_REQUEST_METHOD, "GET")
+				.header(
+						HttpHeaders.ACCESS_CONTROL_REQUEST_HEADERS,
+						"Authorization, Content-Type"))
+			.andExpect(status().isOk())
+			.andExpect(header().string(
+					HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN,
+					"http://localhost:5173"));
+	}
+
+	@Test
+	void unconfiguredOriginIsRejectedByCors() throws Exception {
+		mockMvc.perform(options("/api/services")
+				.header(HttpHeaders.ORIGIN, "https://untrusted.example")
+				.header(HttpHeaders.ACCESS_CONTROL_REQUEST_METHOD, "GET"))
+			.andExpect(status().isForbidden())
+			.andExpect(header().doesNotExist(
+					HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN));
 	}
 
 	@Test
