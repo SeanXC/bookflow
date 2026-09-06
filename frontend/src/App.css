@@ -1,0 +1,61 @@
+.app {
+  display: grid;
+  min-height: 100vh;
+  padding: 24px;
+  place-items: center;
+}
+
+.welcome-card {
+  width: min(100%, 560px);
+  padding: clamp(32px, 7vw, 64px);
+  border: 1px solid #dbe4ee;
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 24px 70px rgba(15, 23, 42, 0.1);
+  text-align: center;
+}
+
+.brand-mark {
+  display: grid;
+  width: 56px;
+  height: 56px;
+  margin: 0 auto 24px;
+  border-radius: 16px;
+  background: #2563eb;
+  color: #fff;
+  font-size: 28px;
+  font-weight: 800;
+  place-items: center;
+}
+
+.eyebrow {
+  margin: 0 0 8px;
+  color: #2563eb;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.welcome-card h1 {
+  margin: 0;
+  color: #0f172a;
+  font-size: clamp(2.5rem, 8vw, 4rem);
+  letter-spacing: -0.06em;
+}
+
+.status {
+  max-width: 430px;
+  margin: 20px auto 0;
+  color: #475569;
+  line-height: 1.7;
+}
+
+.stack {
+  margin-top: 28px;
+  padding-top: 20px;
+  border-top: 1px solid #e2e8f0;
+  color: #64748b;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
