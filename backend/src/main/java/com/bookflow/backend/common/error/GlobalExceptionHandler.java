@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import com.bookflow.backend.common.exception.DuplicateResourceException;
+import com.bookflow.backend.common.exception.InvalidOperationException;
 import com.bookflow.backend.common.exception.ResourceNotFoundException;
 
 import jakarta.validation.ConstraintViolationException;
@@ -34,6 +35,15 @@ public class GlobalExceptionHandler {
 		return buildResponse(
 				HttpStatus.CONFLICT,
 				"DUPLICATE_RESOURCE",
+				exception.getMessage());
+	}
+
+	@ExceptionHandler(InvalidOperationException.class)
+	public ResponseEntity<ApiErrorResponse> handleInvalidOperation(
+			InvalidOperationException exception) {
+		return buildResponse(
+				HttpStatus.BAD_REQUEST,
+				"INVALID_OPERATION",
 				exception.getMessage());
 	}
 
