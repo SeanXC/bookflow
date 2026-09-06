@@ -17,13 +17,17 @@ import org.springframework.security.web.SecurityFilterChain;
 public class SecurityConfig {
 
 	@Bean
-	public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+	public SecurityFilterChain securityFilterChain(
+			HttpSecurity http,
+			BookFlowJwtAuthenticationConverter authenticationConverter) throws Exception {
 		http
 			.csrf(AbstractHttpConfigurer::disable)
 			.httpBasic(AbstractHttpConfigurer::disable)
 			.formLogin(AbstractHttpConfigurer::disable)
 			.sessionManagement(session ->
 				session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+			.oauth2ResourceServer(resourceServer -> resourceServer
+				.jwt(jwt -> jwt.jwtAuthenticationConverter(authenticationConverter)))
 			.authorizeHttpRequests(authorize -> authorize
 				.requestMatchers("/api/auth/**", "/error").permitAll()
 				.anyRequest().authenticated());

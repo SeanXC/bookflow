@@ -1,6 +1,5 @@
 package com.bookflow.backend.security;
 
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
@@ -18,7 +17,7 @@ public class BookFlowUserDetailsService implements UserDetailsService {
 	private final UserRepository userRepository;
 
 	@Override
-	public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
+	public AuthenticatedUser loadUserByUsername(String email) throws UsernameNotFoundException {
 		return userRepository.findByEmailIgnoreCase(email)
 				.map(AuthenticatedUser::from)
 				.orElseThrow(() -> new UsernameNotFoundException("Invalid credentials"));
