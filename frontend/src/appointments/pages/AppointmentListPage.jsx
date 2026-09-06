@@ -1,5 +1,7 @@
 import { useMemo, useState } from 'react'
 import AddIcon from '@mui/icons-material/Add'
+import CancelOutlinedIcon from '@mui/icons-material/CancelOutlined'
+import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline'
 import ClearIcon from '@mui/icons-material/Clear'
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined'
 import {
@@ -22,6 +24,7 @@ import { useAuth } from '../../auth/context/useAuth.js'
 import { useStaff } from '../../staff/api/staffQueries.js'
 import { useAppointments } from '../api/appointmentQueries.js'
 import AppointmentFormDialog from '../components/AppointmentFormDialog.jsx'
+import AppointmentStatusDialog from '../components/AppointmentStatusDialog.jsx'
 
 const INITIAL_PAGINATION = {
   page: 0,
@@ -75,6 +78,12 @@ function AppointmentListPage() {
   const [formOpen, setFormOpen] = useState(false)
   const [editingAppointment, setEditingAppointment] = useState(
     /** @type {import('../types.js').Appointment | null} */ (null),
+  )
+  const [statusAction, setStatusAction] = useState(
+    /** @type {{
+     *   appointment: import('../types.js').Appointment,
+     *   status: 'COMPLETED' | 'CANCELLED'
+     * } | null} */ (null),
   )
 
   const staffQuery = useStaff(
@@ -165,28 +174,56 @@ function AppointmentListPage() {
       },
     ]
 
-    if (canManageAppointments) {
-      baseColumns.push({
-        field: 'actions',
-        headerName: 'Actions',
-        minWidth: 110,
-        sortable: false,
-        filterable: false,
-        renderCell: (params) =>
-          params.row.status === 'CONFIRMED' ? (
+    baseColumns.push({
+      field: 'actions',
+      headerName: 'Actions',
+      minWidth: canManageAppointments ? 330 : 240,
+      sortable: false,
+      filterable: false,
+      renderCell: (params) =>
+        params.row.status === 'CONFIRMED' ? (
+          <Stack direction="row" spacing={0.5}>
+            {canManageAppointments && (
+              <Button
+                onClick={() => {
+                  setEditingAppointment(params.row)
+                  setFormOpen(true)
+                }}
+                size="small"
+                startIcon={<EditOutlinedIcon />}
+              >
+                Edit
+              </Button>
+            )}
             <Button
-              onClick={() => {
-                setEditingAppointment(params.row)
-                setFormOpen(true)
-              }}
+              color="success"
+              onClick={() =>
+                setStatusAction({
+                  appointment: params.row,
+                  status: 'COMPLETED',
+                })
+              }
               size="small"
-              startIcon={<EditOutlinedIcon />}
+              startIcon={<CheckCircleOutlineIcon />}
             >
-              Edit
+              Complete
             </Button>
-          ) : null,
-      })
-    }
+            <Button
+              color="error"
+              onClick={() =>
+                setStatusAction({
+                  appointment: params.row,
+                  status: 'CANCELLED',
+                })
+              }
+              size="small"
+              startIcon={<CancelOutlinedIcon />}
+            >
+              Cancel
+            </Button>
+          </Stack>
+        ) : null,
+    })
 
     return baseColumns
   }, [canManageAppointments])
@@ -372,6 +409,13 @@ function AppointmentListPage() {
           appointment={editingAppointment}
           onClose={() => setFormOpen(false)}
           open
+        />
+      )}
+      {statusAction && (
+        <AppointmentStatusDialog
+          appointment={statusAction.appointment}
+          onClose={() => setStatusAction(null)}
+          status={statusAction.status}
         />
       )}
     </Stack>
