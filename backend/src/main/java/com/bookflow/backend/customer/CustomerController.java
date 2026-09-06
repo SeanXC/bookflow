@@ -2,6 +2,8 @@ package com.bookflow.backend.customer;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -13,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.bookflow.backend.appointment.dto.AppointmentResponse;
 import com.bookflow.backend.customer.dto.CustomerRequest;
 import com.bookflow.backend.customer.dto.CustomerResponse;
 import com.bookflow.backend.security.CurrentUserProvider;
@@ -31,10 +34,27 @@ public class CustomerController {
 	@GetMapping
 	public Page<CustomerResponse> getAllCustomers(
 			@RequestParam(required = false) String search,
-			Pageable pageable) {
+			@PageableDefault(
+				size = 20,
+				sort = {"lastName", "firstName", "id"}) Pageable pageable) {
 		return customerService
 				.getAllCustomers(currentUserProvider.getTenantId(), search, pageable)
 				.map(CustomerResponse::from);
+	}
+
+	@GetMapping("/{customerId}/appointments")
+	public Page<AppointmentResponse> getAppointmentHistory(
+			@PathVariable Long customerId,
+			@PageableDefault(
+				size = 20,
+				sort = {"startTime", "id"},
+				direction = Sort.Direction.DESC) Pageable pageable) {
+		return customerService
+				.getAppointmentHistory(
+						currentUserProvider.getTenantId(),
+						customerId,
+						pageable)
+				.map(AppointmentResponse::from);
 	}
 
 	@GetMapping("/{customerId}")

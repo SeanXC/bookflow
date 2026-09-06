@@ -20,6 +20,11 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
 			Long userId,
 			Pageable pageable);
 
+	Page<Appointment> findAllByTenantIdAndCustomerId(
+			Long tenantId,
+			Long customerId,
+			Pageable pageable);
+
 	@Query("""
 			SELECT appointment
 			FROM Appointment appointment

@@ -6,6 +6,8 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.bookflow.backend.appointment.Appointment;
+import com.bookflow.backend.appointment.AppointmentRepository;
 import com.bookflow.backend.common.exception.ResourceNotFoundException;
 import com.bookflow.backend.tenant.Tenant;
 import com.bookflow.backend.tenant.TenantRepository;
@@ -20,6 +22,7 @@ public class CustomerService {
 
 	private final CustomerRepository customerRepository;
 	private final TenantRepository tenantRepository;
+	private final AppointmentRepository appointmentRepository;
 
 	public Customer getCustomer(Long tenantId, Long customerId) {
 		return customerRepository.findByIdAndTenantId(customerId, tenantId)
@@ -37,6 +40,17 @@ public class CustomerService {
 					pageable);
 		}
 		return customerRepository.findAllByTenantId(tenantId, pageable);
+	}
+
+	public Page<Appointment> getAppointmentHistory(
+			Long tenantId,
+			Long customerId,
+			Pageable pageable) {
+		getCustomer(tenantId, customerId);
+		return appointmentRepository.findAllByTenantIdAndCustomerId(
+				tenantId,
+				customerId,
+				pageable);
 	}
 
 	@Transactional

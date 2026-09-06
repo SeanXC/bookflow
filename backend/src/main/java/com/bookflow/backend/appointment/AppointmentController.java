@@ -4,6 +4,8 @@ import java.time.Instant;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -41,7 +43,10 @@ public class AppointmentController {
 			@DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant from,
 			@RequestParam(required = false)
 			@DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant to,
-			Pageable pageable) {
+			@PageableDefault(
+				size = 20,
+				sort = {"startTime", "id"},
+				direction = Sort.Direction.DESC) Pageable pageable) {
 		return appointmentService
 				.getAllAppointments(
 						currentUserProvider.getTenantId(),
