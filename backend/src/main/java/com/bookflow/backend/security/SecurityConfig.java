@@ -22,7 +22,8 @@ public class SecurityConfig {
 	@Bean
 	public SecurityFilterChain securityFilterChain(
 			HttpSecurity http,
-			BookFlowJwtAuthenticationConverter authenticationConverter) throws Exception {
+			BookFlowJwtAuthenticationConverter authenticationConverter,
+			RestAuthenticationEntryPoint authenticationEntryPoint) throws Exception {
 		http
 			.csrf(AbstractHttpConfigurer::disable)
 			.httpBasic(AbstractHttpConfigurer::disable)
@@ -31,6 +32,8 @@ public class SecurityConfig {
 				session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 			.oauth2ResourceServer(resourceServer -> resourceServer
 				.jwt(jwt -> jwt.jwtAuthenticationConverter(authenticationConverter)))
+			.exceptionHandling(exceptions ->
+				exceptions.authenticationEntryPoint(authenticationEntryPoint))
 			.authorizeHttpRequests(authorize -> authorize
 				.requestMatchers("/api/auth/**", "/error").permitAll()
 				.anyRequest().authenticated());
