@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
 import PropTypes from 'prop-types'
 
-import { queryClient } from '../../api/queryClient.js'
 import {
   login as loginRequest,
   register as registerRequest,
@@ -15,6 +15,7 @@ import {
 import { AuthContext } from './AuthContext.js'
 
 function AuthProvider({ children }) {
+  const queryClient = useQueryClient()
   const [session, setSession] = useState(readAuthSession)
 
   const applySession = useCallback((nextSession) => {
@@ -37,7 +38,7 @@ function AuthProvider({ children }) {
     clearAuthSession()
     setSession(null)
     queryClient.clear()
-  }, [])
+  }, [queryClient])
 
   useEffect(() => {
     window.addEventListener(AUTH_UNAUTHORIZED_EVENT, logout)
