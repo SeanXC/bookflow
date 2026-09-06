@@ -1,7 +1,12 @@
 package com.bookflow.backend.appointment;
 
+import java.time.Instant;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -11,6 +16,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.bookflow.backend.appointment.dto.AppointmentRequest;
@@ -30,9 +36,25 @@ public class AppointmentController {
 	private final CurrentUserProvider currentUserProvider;
 
 	@GetMapping
-	public Page<AppointmentResponse> getAllAppointments(Pageable pageable) {
+	public Page<AppointmentResponse> getAllAppointments(
+			@RequestParam(required = false) Long staffId,
+			@RequestParam(required = false) AppointmentStatus status,
+			@RequestParam(required = false)
+			@DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant from,
+			@RequestParam(required = false)
+			@DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant to,
+			@PageableDefault(
+				size = 20,
+				sort = {"startTime", "id"},
+				direction = Sort.Direction.DESC) Pageable pageable) {
 		return appointmentService
-				.getAllAppointments(currentUserProvider.getTenantId(), pageable)
+				.getAllAppointments(
+						currentUserProvider.getTenantId(),
+						staffId,
+						status,
+						from,
+						to,
+						pageable)
 				.map(AppointmentResponse::from);
 	}
 

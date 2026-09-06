@@ -28,7 +28,24 @@ public class ServiceManagementService {
 	}
 
 	@PreAuthorize("hasAnyRole('OWNER', 'RECEPTIONIST', 'STAFF')")
-	public Page<Service> getAllServices(Long tenantId, Pageable pageable) {
+	public Page<Service> getAllServices(
+			Long tenantId,
+			String search,
+			Boolean active,
+			Pageable pageable) {
+		if (search != null && !search.isBlank()) {
+			return serviceRepository.searchByTenantId(
+					tenantId,
+					escapeLikePattern(search.trim()),
+					active,
+					pageable);
+		}
+		if (active != null) {
+			return serviceRepository.findAllByTenantIdAndActive(
+					tenantId,
+					active,
+					pageable);
+		}
 		return serviceRepository.findAllByTenantId(tenantId, pageable);
 	}
 
@@ -65,5 +82,12 @@ public class ServiceManagementService {
 	@Transactional
 	public void deactivateService(Long tenantId, Long serviceId) {
 		getService(tenantId, serviceId).deactivate();
+	}
+
+	private String escapeLikePattern(String value) {
+		return value
+				.replace("!", "!!")
+				.replace("%", "!%")
+				.replace("_", "!_");
 	}
 }

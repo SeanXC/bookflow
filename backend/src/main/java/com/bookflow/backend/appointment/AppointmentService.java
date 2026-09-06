@@ -45,11 +45,37 @@ public class AppointmentService {
 	}
 
 	@PreAuthorize("hasAnyRole('OWNER', 'RECEPTIONIST', 'STAFF')")
-	public Page<Appointment> getAllAppointments(Long tenantId, Pageable pageable) {
+	public Page<Appointment> getAllAppointments(
+			Long tenantId,
+			Long staffId,
+			AppointmentStatus status,
+			Instant fromTime,
+			Instant toTime,
+			Pageable pageable) {
+		validateTimeRange(fromTime, toTime);
+
 		if (currentUserProvider.getRole() == Role.STAFF) {
+			if (status != null || fromTime != null || toTime != null) {
+				return appointmentRepository.findAllByTenantIdAndStaffUserIdAndFilters(
+						tenantId,
+						currentUserProvider.getUserId(),
+						status,
+						fromTime,
+						toTime,
+						pageable);
+			}
 			return appointmentRepository.findAllByTenantIdAndStaffUserId(
 					tenantId,
 					currentUserProvider.getUserId(),
+					pageable);
+		}
+		if (staffId != null || status != null || fromTime != null || toTime != null) {
+			return appointmentRepository.findAllByTenantIdAndFilters(
+					tenantId,
+					staffId,
+					status,
+					fromTime,
+					toTime,
 					pageable);
 		}
 		return appointmentRepository.findAllByTenantId(tenantId, pageable);
@@ -176,6 +202,13 @@ public class AppointmentService {
 				.orElseThrow(() -> new ResourceNotFoundException(
 						"Appointment",
 						appointmentId));
+	}
+
+	private void validateTimeRange(Instant fromTime, Instant toTime) {
+		if (fromTime != null && toTime != null && fromTime.isAfter(toTime)) {
+			throw new InvalidOperationException(
+					"The appointment filter start time must not be after the end time");
+		}
 	}
 
 	private void ensureStaffCanAccess(Appointment appointment) {

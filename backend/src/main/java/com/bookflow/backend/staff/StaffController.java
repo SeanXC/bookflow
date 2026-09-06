@@ -2,6 +2,7 @@ package com.bookflow.backend.staff;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -11,6 +12,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.bookflow.backend.security.CurrentUserProvider;
@@ -29,8 +31,17 @@ public class StaffController {
 	private final CurrentUserProvider currentUserProvider;
 
 	@GetMapping
-	public Page<StaffResponse> getAllStaff(Pageable pageable) {
-		return staffService.getAllStaff(currentUserProvider.getTenantId(), pageable)
+	public Page<StaffResponse> getAllStaff(
+			@RequestParam(required = false) String search,
+			@RequestParam(required = false) Boolean active,
+			@PageableDefault(
+				size = 20,
+				sort = {"lastName", "firstName", "id"}) Pageable pageable) {
+		return staffService.getAllStaff(
+					currentUserProvider.getTenantId(),
+					search,
+					active,
+					pageable)
 				.map(StaffResponse::from);
 	}
 

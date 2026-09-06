@@ -30,7 +30,24 @@ public class StaffService {
 	}
 
 	@PreAuthorize("hasAnyRole('OWNER', 'RECEPTIONIST')")
-	public Page<Staff> getAllStaff(Long tenantId, Pageable pageable) {
+	public Page<Staff> getAllStaff(
+			Long tenantId,
+			String search,
+			Boolean active,
+			Pageable pageable) {
+		if (search != null && !search.isBlank()) {
+			return staffRepository.searchByTenantId(
+					tenantId,
+					escapeLikePattern(search.trim()),
+					active,
+					pageable);
+		}
+		if (active != null) {
+			return staffRepository.findAllByTenantIdAndActive(
+					tenantId,
+					active,
+					pageable);
+		}
 		return staffRepository.findAllByTenantId(tenantId, pageable);
 	}
 
@@ -81,5 +98,12 @@ public class StaffService {
 
 		return userRepository.findByIdAndTenantId(userId, tenantId)
 				.orElseThrow(() -> new ResourceNotFoundException("User", userId));
+	}
+
+	private String escapeLikePattern(String value) {
+		return value
+				.replace("!", "!!")
+				.replace("%", "!%")
+				.replace("_", "!_");
 	}
 }
