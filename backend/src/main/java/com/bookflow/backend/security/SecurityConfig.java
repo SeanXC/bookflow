@@ -32,6 +32,7 @@ public class SecurityConfig {
 			.sessionManagement(session ->
 				session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 			.oauth2ResourceServer(resourceServer -> resourceServer
+				.authenticationEntryPoint(authenticationEntryPoint)
 				.jwt(jwt -> jwt.jwtAuthenticationConverter(authenticationConverter)))
 			.exceptionHandling(exceptions ->
 				exceptions
