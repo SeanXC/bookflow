@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.bookflow.backend.customer.dto.CustomerRequest;
@@ -28,9 +29,11 @@ public class CustomerController {
 	private final CurrentUserProvider currentUserProvider;
 
 	@GetMapping
-	public Page<CustomerResponse> getAllCustomers(Pageable pageable) {
+	public Page<CustomerResponse> getAllCustomers(
+			@RequestParam(required = false) String search,
+			Pageable pageable) {
 		return customerService
-				.getAllCustomers(currentUserProvider.getTenantId(), pageable)
+				.getAllCustomers(currentUserProvider.getTenantId(), search, pageable)
 				.map(CustomerResponse::from);
 	}
 

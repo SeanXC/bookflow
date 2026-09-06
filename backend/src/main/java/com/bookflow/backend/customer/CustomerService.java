@@ -26,7 +26,16 @@ public class CustomerService {
 				.orElseThrow(() -> new ResourceNotFoundException("Customer", customerId));
 	}
 
-	public Page<Customer> getAllCustomers(Long tenantId, Pageable pageable) {
+	public Page<Customer> getAllCustomers(
+			Long tenantId,
+			String search,
+			Pageable pageable) {
+		if (search != null && !search.isBlank()) {
+			return customerRepository.searchByTenantId(
+					tenantId,
+					escapeLikePattern(search.trim()),
+					pageable);
+		}
 		return customerRepository.findAllByTenantId(tenantId, pageable);
 	}
 
@@ -57,5 +66,12 @@ public class CustomerService {
 		Customer customer = getCustomer(tenantId, customerId);
 		customer.updateDetails(firstName, lastName, email, phone, notes);
 		return customer;
+	}
+
+	private String escapeLikePattern(String value) {
+		return value
+				.replace("!", "!!")
+				.replace("%", "!%")
+				.replace("_", "!_");
 	}
 }
