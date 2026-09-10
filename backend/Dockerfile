@@ -20,8 +20,11 @@ RUN addgroup -S bookflow \
 WORKDIR /app
 
 COPY --from=build --chown=bookflow:bookflow /workspace/app.jar app.jar
+COPY --chown=bookflow:bookflow docker-entrypoint.sh docker-entrypoint.sh
+
+RUN chmod +x docker-entrypoint.sh
 
 USER bookflow
 EXPOSE 8080
 
-ENTRYPOINT ["java", "-XX:MaxRAMPercentage=75.0", "-jar", "app.jar"]
+ENTRYPOINT ["./docker-entrypoint.sh"]
