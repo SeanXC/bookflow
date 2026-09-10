@@ -9,6 +9,9 @@ import {
   CustomerListPage,
   DashboardPage,
   LoginPage,
+  PublicBookingLayout,
+  PublicBusinessPage,
+  PublicServicePage,
   RegisterPage,
   ServiceListPage,
   StaffAvailabilityPage,
@@ -86,5 +89,19 @@ export const router = createBrowserRouter([
   {
     path: '/register',
     element: <RegisterPage />,
+  },
+  {
+    path: '/book/:slug',
+    element: <PublicBookingLayout />,
+    children: [
+      {
+        index: true,
+        element: <PublicBusinessPage />,
+      },
+      {
+        path: 'services/:serviceId',
+        element: <PublicServicePage />,
+      },
+    ],
   },
 ])
