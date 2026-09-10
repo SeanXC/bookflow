@@ -1,6 +1,7 @@
 package com.bookflow.backend.ai;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -12,7 +13,9 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
+import java.math.BigDecimal;
 import java.time.Clock;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.util.List;
@@ -26,13 +29,20 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import com.bookflow.backend.ai.dto.AssistantBookingResponse;
 import com.bookflow.backend.ai.dto.AssistantChatRequest;
 import com.bookflow.backend.ai.dto.AssistantChatResponse;
+import com.bookflow.backend.ai.dto.AssistantConfirmRequest;
 import com.bookflow.backend.ai.dto.AssistantMessageRequest;
 import com.bookflow.backend.ai.dto.AssistantMessageRole;
+import com.bookflow.backend.appointment.Appointment;
 import com.bookflow.backend.common.exception.InvalidOperationException;
 import com.bookflow.backend.common.exception.ResourceNotFoundException;
+import com.bookflow.backend.customer.Customer;
+import com.bookflow.backend.publicbooking.PublicBookingService;
 import com.bookflow.backend.publicbooking.PublicProfileService;
+import com.bookflow.backend.publicbooking.dto.PublicAppointmentRequest;
+import com.bookflow.backend.staff.Staff;
 import com.bookflow.backend.tenant.Tenant;
 import com.bookflow.backend.tenant.TenantRepository;
 
@@ -52,6 +62,9 @@ class AssistantServiceTest {
 	private BookingToolExecutor bookingToolExecutor;
 
 	@Mock
+	private PublicBookingService publicBookingService;
+
+	@Mock
 	private PublicProfileService publicProfileService;
 
 	@Mock
@@ -61,14 +74,20 @@ class AssistantServiceTest {
 	private final Clock clock = Clock.fixed(
 			Instant.parse("2026-09-14T12:00:00Z"),
 			ZoneId.of("UTC"));
+	private AssistantProposalStore proposalStore;
 	private AssistantService assistantService;
 	private Tenant tenant;
 
 	@BeforeEach
 	void setUp() {
+		proposalStore = new AssistantProposalStore(
+				new AssistantProperties(Duration.ofMinutes(10)),
+				clock);
 		assistantService = new AssistantService(
 				llmClient,
 				bookingToolExecutor,
+				proposalStore,
+				publicBookingService,
 				publicProfileService,
 				tenantRepository,
 				clock,
@@ -87,7 +106,7 @@ class AssistantServiceTest {
 
 		assertEquals("We have haircuts available.", response.message());
 		assertNull(response.proposal());
-		verifyNoInteractions(bookingToolExecutor);
+		verifyNoInteractions(bookingToolExecutor, publicBookingService);
 		verify(publicProfileService).getPublicBusiness(SLUG);
 		verify(tenantRepository, never()).findById(any());
 	}
@@ -142,25 +161,7 @@ class AssistantServiceTest {
 						"""),
 				textCompletion("Please confirm this haircut with Anna."));
 		when(bookingToolExecutor.execute(eq(TENANT_ID), any(LlmToolCall.class)))
-				.thenReturn("""
-						{
-						  "status": "proposed",
-						  "requiresConfirmation": true,
-						  "staffId": 40,
-						  "staffFirstName": "Anna",
-						  "staffLastName": "Smith",
-						  "serviceId": 50,
-						  "serviceName": "Haircut",
-						  "price": 30.00,
-						  "durationMinutes": 60,
-						  "startTime": "2026-09-14T09:00:00Z",
-						  "endTime": "2026-09-14T10:00:00Z",
-						  "firstName": "Emma",
-						  "lastName": "Chen",
-						  "email": "emma@example.com",
-						  "phone": "555-0100"
-						}
-						""");
+				.thenReturn(proposedJson());
 
 		AssistantChatResponse response = assistantService.chatForTenant(
 				TENANT_ID,
@@ -170,7 +171,9 @@ class AssistantServiceTest {
 		assertEquals(40L, response.proposal().staffId());
 		assertEquals("Haircut", response.proposal().serviceName());
 		assertTrue(response.proposal().requiresConfirmation());
+		assertNotNull(response.proposal().proposalId());
 		assertEquals(Instant.parse("2026-09-14T09:00:00Z"), response.proposal().startTime());
+		verifyNoInteractions(publicBookingService);
 	}
 
 	@Test
@@ -182,7 +185,7 @@ class AssistantServiceTest {
 				ResourceNotFoundException.class,
 				() -> assistantService.chatForPublicSlug(SLUG, userTurn("Hi")));
 
-		verifyNoInteractions(llmClient, bookingToolExecutor);
+		verifyNoInteractions(llmClient, bookingToolExecutor, publicBookingService);
 	}
 
 	@Test
@@ -193,7 +196,7 @@ class AssistantServiceTest {
 				ResourceNotFoundException.class,
 				() -> assistantService.chatForTenant(TENANT_ID, userTurn("Hi")));
 
-		verifyNoInteractions(llmClient, bookingToolExecutor, publicProfileService);
+		verifyNoInteractions(llmClient, bookingToolExecutor, publicBookingService, publicProfileService);
 	}
 
 	@Test
@@ -212,7 +215,7 @@ class AssistantServiceTest {
 										AssistantMessageRole.ASSISTANT,
 										"Hello")))));
 
-		verifyNoInteractions(llmClient, bookingToolExecutor);
+		verifyNoInteractions(llmClient, bookingToolExecutor, publicBookingService);
 	}
 
 	@Test
@@ -232,6 +235,121 @@ class AssistantServiceTest {
 		LlmMessage toolMessage = secondRequest.messages().getLast();
 		assertEquals(LlmRole.TOOL, toolMessage.role());
 		assertTrue(toolMessage.content().contains("Unknown booking tool: delete_tenant"));
+	}
+
+	@Test
+	void confirmBooksOnlyAfterAStoredProposalForTheSameTenant() {
+		when(tenantRepository.findById(TENANT_ID)).thenReturn(Optional.of(tenant));
+		when(llmClient.complete(any())).thenReturn(
+				toolCompletion(
+						"call_2",
+						BookingToolContract.PROPOSE_BOOKING,
+						"{}"),
+				textCompletion("Please confirm this haircut with Anna."));
+		when(bookingToolExecutor.execute(eq(TENANT_ID), any(LlmToolCall.class)))
+				.thenReturn(proposedJson());
+		when(publicBookingService.bookGuestAppointment(eq(tenant), any()))
+				.thenReturn(bookedHaircut());
+
+		AssistantChatResponse chat = assistantService.chatForTenant(
+				TENANT_ID,
+				userTurn("Book Anna tomorrow at 9"));
+		AssistantBookingResponse booked = assistantService.confirmForTenant(
+				TENANT_ID,
+				new AssistantConfirmRequest(chat.proposal().proposalId()));
+
+		assertEquals(99L, booked.appointmentId());
+		assertEquals(40L, booked.staffId());
+		ArgumentCaptor<PublicAppointmentRequest> request = ArgumentCaptor.forClass(
+				PublicAppointmentRequest.class);
+		verify(publicBookingService).bookGuestAppointment(eq(tenant), request.capture());
+		assertEquals(40L, request.getValue().staffId());
+		assertEquals(50L, request.getValue().serviceId());
+		assertEquals("emma@example.com", request.getValue().email());
+	}
+
+	@Test
+	void confirmRejectsAProposalFromAnotherTenant() {
+		Tenant other = new Tenant("Other Salon", "other@example.com", null);
+		ReflectionTestUtils.setField(other, "id", OTHER_TENANT_ID);
+		when(tenantRepository.findById(TENANT_ID)).thenReturn(Optional.of(tenant));
+		when(tenantRepository.findById(OTHER_TENANT_ID)).thenReturn(Optional.of(other));
+		when(llmClient.complete(any())).thenReturn(
+				toolCompletion(
+						"call_2",
+						BookingToolContract.PROPOSE_BOOKING,
+						"{}"),
+				textCompletion("Please confirm this haircut with Anna."));
+		when(bookingToolExecutor.execute(eq(TENANT_ID), any(LlmToolCall.class)))
+				.thenReturn(proposedJson());
+
+		String proposalId = assistantService.chatForTenant(
+				TENANT_ID,
+				userTurn("Book Anna tomorrow at 9"))
+				.proposal()
+				.proposalId();
+
+		assertThrows(
+				InvalidOperationException.class,
+				() -> assistantService.confirmForTenant(
+						OTHER_TENANT_ID,
+						new AssistantConfirmRequest(proposalId)));
+		verify(publicBookingService, never()).bookGuestAppointment(any(), any());
+		verify(bookingToolExecutor, never()).execute(eq(OTHER_TENANT_ID), any());
+
+		when(publicBookingService.bookGuestAppointment(eq(tenant), any()))
+				.thenReturn(bookedHaircut());
+		AssistantBookingResponse booked = assistantService.confirmForTenant(
+				TENANT_ID,
+				new AssistantConfirmRequest(proposalId));
+		assertEquals(99L, booked.appointmentId());
+	}
+
+	@Test
+	void confirmRejectsAnUnknownProposalWithoutBooking() {
+		when(tenantRepository.findById(TENANT_ID)).thenReturn(Optional.of(tenant));
+
+		assertThrows(
+				InvalidOperationException.class,
+				() -> assistantService.confirmForTenant(
+						TENANT_ID,
+						new AssistantConfirmRequest("missing-proposal")));
+
+		verifyNoInteractions(publicBookingService, bookingToolExecutor);
+	}
+
+	@Test
+	void confirmDoesNotBookWhenTheSlotIsNoLongerAvailable() {
+		when(tenantRepository.findById(TENANT_ID)).thenReturn(Optional.of(tenant));
+		when(llmClient.complete(any())).thenReturn(
+				toolCompletion(
+						"call_2",
+						BookingToolContract.PROPOSE_BOOKING,
+						"{}"),
+				textCompletion("Please confirm this haircut with Anna."));
+		when(bookingToolExecutor.execute(eq(TENANT_ID), any(LlmToolCall.class)))
+				.thenReturn(
+						proposedJson(),
+						"""
+						{"error":"The requested start time is not an available booking slot"}
+						""");
+
+		String proposalId = assistantService.chatForTenant(
+				TENANT_ID,
+				userTurn("Book Anna tomorrow at 9"))
+				.proposal()
+				.proposalId();
+
+		InvalidOperationException exception = assertThrows(
+				InvalidOperationException.class,
+				() -> assistantService.confirmForTenant(
+						TENANT_ID,
+						new AssistantConfirmRequest(proposalId)));
+
+		assertEquals(
+				"The requested start time is not an available booking slot",
+				exception.getMessage());
+		verify(publicBookingService, never()).bookGuestAppointment(any(), any());
 	}
 
 	private LlmRequest captureLlmRequest() {
@@ -258,5 +376,57 @@ class AssistantServiceTest {
 				null,
 				List.of(new LlmToolCall(id, name, argumentsJson)),
 				"tool_calls");
+	}
+
+	private String proposedJson() {
+		return """
+				{
+				  "status": "proposed",
+				  "requiresConfirmation": true,
+				  "staffId": 40,
+				  "staffFirstName": "Anna",
+				  "staffLastName": "Smith",
+				  "serviceId": 50,
+				  "serviceName": "Haircut",
+				  "price": 30.00,
+				  "durationMinutes": 60,
+				  "startTime": "2026-09-14T09:00:00Z",
+				  "endTime": "2026-09-14T10:00:00Z",
+				  "firstName": "Emma",
+				  "lastName": "Chen",
+				  "email": "emma@example.com",
+				  "phone": "555-0100"
+				}
+				""";
+	}
+
+	private Appointment bookedHaircut() {
+		Customer customer = new Customer(
+				tenant,
+				"Emma",
+				"Chen",
+				"emma@example.com",
+				"555-0100",
+				null);
+		ReflectionTestUtils.setField(customer, "id", 30L);
+		Staff staff = new Staff(tenant, null, "Anna", "Smith", null);
+		ReflectionTestUtils.setField(staff, "id", 40L);
+		com.bookflow.backend.service.Service service = new com.bookflow.backend.service.Service(
+				tenant,
+				"Haircut",
+				null,
+				new BigDecimal("30.00"),
+				60);
+		ReflectionTestUtils.setField(service, "id", 50L);
+		Appointment appointment = new Appointment(
+				tenant,
+				customer,
+				staff,
+				service,
+				Instant.parse("2026-09-14T09:00:00Z"),
+				Instant.parse("2026-09-14T10:00:00Z"),
+				null);
+		ReflectionTestUtils.setField(appointment, "id", 99L);
+		return appointment;
 	}
 }

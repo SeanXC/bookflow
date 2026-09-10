@@ -8,6 +8,7 @@ import tools.jackson.databind.JsonNode;
 
 @Schema(description = "A validated booking proposal that still requires guest confirmation")
 public record AssistantProposalResponse(
+		String proposalId,
 		boolean requiresConfirmation,
 		Long staffId,
 		String staffFirstName,
@@ -47,6 +48,7 @@ public record AssistantProposalResponse(
 			return null;
 		}
 		return new AssistantProposalResponse(
+				null,
 				true,
 				staffId,
 				text(node, "staffFirstName"),
@@ -62,6 +64,26 @@ public record AssistantProposalResponse(
 				email,
 				phone,
 				text(node, "notes"));
+	}
+
+	public AssistantProposalResponse withProposalId(String proposalId) {
+		return new AssistantProposalResponse(
+				proposalId,
+				requiresConfirmation,
+				staffId,
+				staffFirstName,
+				staffLastName,
+				serviceId,
+				serviceName,
+				price,
+				durationMinutes,
+				startTime,
+				endTime,
+				firstName,
+				lastName,
+				email,
+				phone,
+				notes);
 	}
 
 	private static String text(JsonNode node, String field) {

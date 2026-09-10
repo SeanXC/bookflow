@@ -8,14 +8,18 @@ import java.util.List;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 
+import com.bookflow.backend.ai.dto.AssistantBookingResponse;
 import com.bookflow.backend.ai.dto.AssistantChatRequest;
 import com.bookflow.backend.ai.dto.AssistantChatResponse;
+import com.bookflow.backend.ai.dto.AssistantConfirmRequest;
 import com.bookflow.backend.ai.dto.AssistantMessageRequest;
 import com.bookflow.backend.ai.dto.AssistantMessageRole;
 import com.bookflow.backend.ai.dto.AssistantProposalResponse;
 import com.bookflow.backend.common.exception.InvalidOperationException;
 import com.bookflow.backend.common.exception.ResourceNotFoundException;
+import com.bookflow.backend.publicbooking.PublicBookingService;
 import com.bookflow.backend.publicbooking.PublicProfileService;
+import com.bookflow.backend.publicbooking.dto.PublicAppointmentRequest;
 import com.bookflow.backend.tenant.Tenant;
 import com.bookflow.backend.tenant.TenantRepository;
 
@@ -32,6 +36,8 @@ public class AssistantService {
 
 	private final LlmClient llmClient;
 	private final BookingToolExecutor bookingToolExecutor;
+	private final AssistantProposalStore proposalStore;
+	private final PublicBookingService publicBookingService;
 	private final PublicProfileService publicProfileService;
 	private final TenantRepository tenantRepository;
 	private final Clock businessClock;
@@ -43,9 +49,20 @@ public class AssistantService {
 
 	@PreAuthorize("hasAnyRole('OWNER', 'RECEPTIONIST', 'STAFF')")
 	public AssistantChatResponse chatForTenant(Long tenantId, AssistantChatRequest request) {
-		Tenant tenant = tenantRepository.findById(tenantId)
-				.orElseThrow(() -> new ResourceNotFoundException("Tenant", tenantId));
-		return chat(tenant, request);
+		return chat(requireTenant(tenantId), request);
+	}
+
+	public AssistantBookingResponse confirmForPublicSlug(
+			String slug,
+			AssistantConfirmRequest request) {
+		return confirm(publicProfileService.getPublicBusiness(slug), request);
+	}
+
+	@PreAuthorize("hasAnyRole('OWNER', 'RECEPTIONIST', 'STAFF')")
+	public AssistantBookingResponse confirmForTenant(
+			Long tenantId,
+			AssistantConfirmRequest request) {
+		return confirm(requireTenant(tenantId), request);
 	}
 
 	private AssistantChatResponse chat(Tenant tenant, AssistantChatRequest request) {
@@ -75,7 +92,7 @@ public class AssistantService {
 			int callIndex = 0;
 			for (LlmToolCall toolCall : completion.toolCalls()) {
 				String result = executeTool(tenant.getId(), toolCall);
-				AssistantProposalResponse next = readProposal(toolCall.name(), result);
+				AssistantProposalResponse next = readProposal(tenant.getId(), toolCall.name(), result);
 				if (next != null) {
 					proposal = next;
 				}
@@ -84,6 +101,77 @@ public class AssistantService {
 		}
 		throw new InvalidOperationException(
 				"The booking assistant is temporarily unavailable.");
+	}
+
+	private AssistantBookingResponse confirm(Tenant tenant, AssistantConfirmRequest request) {
+		if (request == null || request.proposalId() == null || request.proposalId().isBlank()) {
+			throw new InvalidOperationException("This booking proposal is no longer valid");
+		}
+		String proposalId = request.proposalId().trim();
+		AssistantProposalResponse proposal = proposalStore.consume(proposalId, tenant.getId());
+		try {
+			assertProposalStillBookable(tenant.getId(), proposal);
+			return AssistantBookingResponse.from(publicBookingService.bookGuestAppointment(
+					tenant,
+					toAppointmentRequest(proposal)));
+		} catch (RuntimeException exception) {
+			proposalStore.restore(proposalId, tenant.getId(), proposal);
+			throw exception;
+		}
+	}
+
+	private void assertProposalStillBookable(Long tenantId, AssistantProposalResponse proposal) {
+		if (!looksLikeEmail(proposal.email())) {
+			throw new InvalidOperationException("A valid email is required to confirm this booking");
+		}
+		String result = executeTool(tenantId, new LlmToolCall(
+				"confirm",
+				BookingToolContract.PROPOSE_BOOKING,
+				writeProposalArguments(proposal)));
+		JsonNode node = jsonMapper.readTree(result);
+		JsonNode error = node.get("error");
+		if (error != null && !error.isNull() && !error.isMissingNode()) {
+			throw new InvalidOperationException(error.asString());
+		}
+		if (AssistantProposalResponse.fromToolResult(node) == null) {
+			throw new InvalidOperationException("This booking proposal is no longer valid");
+		}
+	}
+
+	private PublicAppointmentRequest toAppointmentRequest(AssistantProposalResponse proposal) {
+		return new PublicAppointmentRequest(
+				proposal.staffId(),
+				proposal.serviceId(),
+				proposal.startTime(),
+				proposal.firstName(),
+				proposal.lastName(),
+				proposal.email(),
+				proposal.phone(),
+				proposal.notes());
+	}
+
+	private String writeProposalArguments(AssistantProposalResponse proposal) {
+		ObjectNode arguments = jsonMapper.createObjectNode();
+		arguments.put("staffId", proposal.staffId());
+		arguments.put("serviceId", proposal.serviceId());
+		arguments.put("startTime", proposal.startTime().toString());
+		arguments.put("firstName", proposal.firstName());
+		arguments.put("lastName", proposal.lastName());
+		arguments.put("email", proposal.email());
+		arguments.put("phone", proposal.phone());
+		if (proposal.notes() != null) {
+			arguments.put("notes", proposal.notes());
+		}
+		return jsonMapper.writeValueAsString(arguments);
+	}
+
+	private boolean looksLikeEmail(String email) {
+		return email != null && email.matches("[^@\\s]+@[^@\\s]+\\.[^@\\s]+");
+	}
+
+	private Tenant requireTenant(Long tenantId) {
+		return tenantRepository.findById(tenantId)
+				.orElseThrow(() -> new ResourceNotFoundException("Tenant", tenantId));
 	}
 
 	private void validateConversation(AssistantChatRequest request) {
@@ -104,13 +192,20 @@ public class AssistantService {
 		}
 	}
 
-	private AssistantProposalResponse readProposal(String toolName, String resultJson) {
+	private AssistantProposalResponse readProposal(
+			Long tenantId,
+			String toolName,
+			String resultJson) {
 		if (!BookingToolContract.PROPOSE_BOOKING.equals(toolName) || resultJson == null) {
 			return null;
 		}
 		try {
-			JsonNode node = jsonMapper.readTree(resultJson);
-			return AssistantProposalResponse.fromToolResult(node);
+			AssistantProposalResponse proposal = AssistantProposalResponse.fromToolResult(
+					jsonMapper.readTree(resultJson));
+			if (proposal == null) {
+				return null;
+			}
+			return proposal.withProposalId(proposalStore.save(tenantId, proposal));
 		} catch (RuntimeException exception) {
 			return null;
 		}

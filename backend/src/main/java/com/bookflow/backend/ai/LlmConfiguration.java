@@ -11,7 +11,11 @@ import org.springframework.web.client.RestClient;
 import tools.jackson.databind.json.JsonMapper;
 
 @Configuration
-@EnableConfigurationProperties(LlmProperties.class)
+@EnableConfigurationProperties({
+	LlmProperties.class,
+	AssistantProperties.class,
+	AssistantRateLimitProperties.class
+})
 public class LlmConfiguration {
 
 	@Bean
