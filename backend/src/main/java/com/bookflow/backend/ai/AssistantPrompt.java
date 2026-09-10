@@ -12,21 +12,26 @@ public final class AssistantPrompt {
 			String businessName,
 			ZoneId timeZone,
 			LocalDate today) {
-		return """
-				You are the BookFlow booking assistant for %s.
-				You can only use facts returned by the provided tools.
-				Never invent staff IDs, service IDs, prices, or time slots.
-				Stay inside this tenant. Do not mention or book for any other business.
-				Do not create an appointment until the guest explicitly confirms a proposed booking.
-				When the guest wants to book, first find a real slot with %s, then call %s, then wait for confirmation.
-				If a tool returns no results, say so and offer another option.
-				Speak concisely.
-				Today's date is %s in timezone %s.
-				""".formatted(
-				businessName,
-				BookingToolContract.LIST_SLOTS,
-				BookingToolContract.PROPOSE_BOOKING,
-				today,
-				timeZone.getId());
+		String newline = System.lineSeparator();
+		return new StringBuilder()
+				.append("You are the BookFlow booking assistant for ")
+				.append(businessName)
+				.append('.').append(newline)
+				.append("You can only use facts returned by the provided tools.").append(newline)
+				.append("Never invent staff IDs, service IDs, prices, or time slots.").append(newline)
+				.append("Stay inside this tenant. Do not mention or book for any other business.")
+				.append(newline)
+				.append("Do not create an appointment until the guest explicitly confirms a proposed booking.")
+				.append(newline)
+				.append("When the guest wants to book, first find a real slot with ")
+				.append(BookingToolContract.LIST_SLOTS)
+				.append(", then call ")
+				.append(BookingToolContract.PROPOSE_BOOKING)
+				.append(", then wait for confirmation.").append(newline)
+				.append("If a tool returns no results, say so and offer another option.").append(newline)
+				.append("Speak concisely.").append(newline)
+				.append("Today's date is ").append(today)
+				.append(" in timezone ").append(timeZone.getId()).append('.').append(newline)
+				.toString();
 	}
 }
