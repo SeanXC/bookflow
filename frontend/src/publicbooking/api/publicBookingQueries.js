@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query'
 import {
   getPublicBusiness,
   getPublicServices,
+  getPublicSlots,
   getPublicStaff,
 } from './publicBookingApi.js'
 
@@ -14,6 +15,12 @@ export const publicBookingKeys = {
   services: (slug) => [...publicBookingKeys.all, 'services', slug],
   /** @param {string} slug */
   staff: (slug) => [...publicBookingKeys.all, 'staff', slug],
+  /** @param {string} slug */
+  slotsRoot: (slug) => [...publicBookingKeys.all, 'slots', slug],
+  /**
+   * @param {import('../types.js').PublicSlotFilters} filters
+   */
+  slots: (filters) => [...publicBookingKeys.slotsRoot(filters.slug), filters],
 }
 
 /**
@@ -46,5 +53,23 @@ export function usePublicStaff(slug) {
     enabled: Boolean(slug),
     queryKey: publicBookingKeys.staff(slug ?? ''),
     queryFn: () => getPublicStaff(slug ?? ''),
+  })
+}
+
+/**
+ * @param {import('../types.js').PublicSlotFilters} filters
+ * @param {boolean} [enabled]
+ */
+export function usePublicSlots(filters, enabled = true) {
+  return useQuery({
+    enabled:
+      enabled &&
+      Boolean(filters.slug) &&
+      Boolean(filters.staffId) &&
+      Boolean(filters.serviceId) &&
+      Boolean(filters.from) &&
+      Boolean(filters.to),
+    queryKey: publicBookingKeys.slots(filters),
+    queryFn: () => getPublicSlots(filters),
   })
 }

@@ -155,20 +155,28 @@ function PublicServicePage() {
           >
             {staff.map((member) => (
               <Paper
+                component={RouterLink}
                 elevation={0}
                 key={member.id}
                 sx={{
                   border: 1,
                   borderColor: 'divider',
                   borderRadius: 3,
+                  color: 'inherit',
+                  display: 'block',
                   p: 3,
+                  textDecoration: 'none',
+                  '&:hover': {
+                    borderColor: 'primary.main',
+                  },
                 }}
+                to={`/book/${slug}/services/${serviceId}/staff/${member.id}`}
               >
                 <Typography fontWeight={800} variant="h6">
                   {member.firstName} {member.lastName}
                 </Typography>
                 <Typography color="text.secondary" mt={1}>
-                  Available for this service
+                  Choose a time
                 </Typography>
               </Paper>
             ))}
