@@ -31,7 +31,13 @@ public class PublicBookingService {
 	public Appointment createPublicAppointment(
 			String slug,
 			PublicAppointmentRequest request) {
-		Tenant tenant = publicProfileService.getPublicBusiness(slug);
+		return bookGuestAppointment(publicProfileService.getPublicBusiness(slug), request);
+	}
+
+	@Transactional
+	public Appointment bookGuestAppointment(
+			Tenant tenant,
+			PublicAppointmentRequest request) {
 		staffRepository.findByIdAndTenantId(request.staffId(), tenant.getId())
 				.filter(Staff::isActive)
 				.orElseThrow(() -> new ResourceNotFoundException("Staff", request.staffId()));

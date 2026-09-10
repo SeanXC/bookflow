@@ -30,7 +30,7 @@ import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
-@Transactional(readOnly = true)
+@Transactional(readOnly = true, noRollbackFor = InvalidOperationException.class)
 public class AvailabilityService {
 
 	private final StaffWeeklyHoursRepository weeklyHoursRepository;
