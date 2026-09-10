@@ -1,0 +1,43 @@
+services:
+  - type: web
+    name: bookflow-api
+    runtime: docker
+    plan: free
+    region: frankfurt
+    rootDir: backend
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /api/public/health
+    autoDeployTrigger: checksPass
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: bookflow-db
+          property: connectionString
+      - key: SPRING_DATASOURCE_USERNAME
+        fromDatabase:
+          name: bookflow-db
+          property: user
+      - key: SPRING_DATASOURCE_PASSWORD
+        fromDatabase:
+          name: bookflow-db
+          property: password
+      - key: SPRING_PROFILES_ACTIVE
+        value: production
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_ISSUER
+        value: bookflow
+      - key: BUSINESS_TIME_ZONE
+        value: UTC
+      - key: CORS_ALLOWED_ORIGINS
+        sync: false
+      - key: AI_LLM_API_KEY
+        sync: false
+
+databases:
+  - name: bookflow-db
+    plan: free
+    region: frankfurt
+    databaseName: bookflow
+    user: bookflow
