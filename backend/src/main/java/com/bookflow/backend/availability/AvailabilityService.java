@@ -264,6 +264,14 @@ public class AvailabilityService {
 			int durationMinutes,
 			Instant startTime) {
 		getStaff(tenantId, staffId);
+		assertRequestedSlotIsAvailable(tenantId, staffId, durationMinutes, startTime);
+	}
+
+	public void assertRequestedSlotIsAvailable(
+			Long tenantId,
+			Long staffId,
+			int durationMinutes,
+			Instant startTime) {
 		ZoneId zone = businessClock.getZone();
 		LocalDate date = LocalDate.ofInstant(startTime, zone);
 		boolean bookable = AvailabilitySlotCalculator.calculate(

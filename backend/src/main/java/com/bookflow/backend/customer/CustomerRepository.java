@@ -12,6 +12,8 @@ public interface CustomerRepository extends JpaRepository<Customer, Long> {
 
 	Optional<Customer> findByIdAndTenantId(Long id, Long tenantId);
 
+	Optional<Customer> findFirstByTenantIdAndEmailIgnoreCase(Long tenantId, String email);
+
 	long countByTenantId(Long tenantId);
 
 	Page<Customer> findAllByTenantId(Long tenantId, Pageable pageable);

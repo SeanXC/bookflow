@@ -92,6 +92,23 @@ public class AppointmentService {
 			Long serviceId,
 			Instant startTime,
 			String notes) {
+		return bookAppointment(
+				tenantId,
+				customerId,
+				staffId,
+				serviceId,
+				startTime,
+				notes);
+	}
+
+	@Transactional
+	public Appointment bookAppointment(
+			Long tenantId,
+			Long customerId,
+			Long staffId,
+			Long serviceId,
+			Instant startTime,
+			String notes) {
 		Tenant tenant = tenantRepository.findById(tenantId)
 				.orElseThrow(() -> new ResourceNotFoundException("Tenant", tenantId));
 		Customer customer = customerRepository.findByIdAndTenantId(customerId, tenantId)
@@ -110,7 +127,7 @@ public class AppointmentService {
 		}
 
 		Instant endTime = startTime.plus(service.getDurationMinutes(), ChronoUnit.MINUTES);
-		availabilityService.ensureRequestedSlotIsAvailable(
+		availabilityService.assertRequestedSlotIsAvailable(
 				tenantId,
 				staffId,
 				service.getDurationMinutes(),
@@ -167,7 +184,7 @@ public class AppointmentService {
 		}
 
 		Instant endTime = startTime.plus(service.getDurationMinutes(), ChronoUnit.MINUTES);
-		availabilityService.ensureRequestedSlotIsAvailable(
+		availabilityService.assertRequestedSlotIsAvailable(
 				tenantId,
 				staffId,
 				service.getDurationMinutes(),
