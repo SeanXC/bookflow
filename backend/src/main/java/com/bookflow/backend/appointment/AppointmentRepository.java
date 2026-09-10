@@ -2,6 +2,7 @@ package com.bookflow.backend.appointment;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.domain.Page;
@@ -91,6 +92,13 @@ public interface AppointmentRepository extends JpaRepository<Appointment, Long> 
 			@Param("fromTime") Instant fromTime,
 			@Param("toTime") Instant toTime,
 			Pageable pageable);
+
+	List<Appointment> findAllByTenantIdAndStaffIdAndStatusNotAndEndTimeGreaterThanAndStartTimeLessThan(
+			Long tenantId,
+			Long staffId,
+			AppointmentStatus excludedStatus,
+			Instant rangeStart,
+			Instant rangeEnd);
 
 	@Query("""
 			SELECT COUNT(appointment)

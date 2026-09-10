@@ -4,8 +4,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.math.BigDecimal;
+import java.time.DayOfWeek;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.LocalTime;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,6 +22,11 @@ import org.springframework.transaction.annotation.Transactional;
 import com.bookflow.backend.appointment.Appointment;
 import com.bookflow.backend.appointment.AppointmentRepository;
 import com.bookflow.backend.appointment.AppointmentStatus;
+import com.bookflow.backend.availability.AvailabilityExceptionType;
+import com.bookflow.backend.availability.StaffAvailabilityException;
+import com.bookflow.backend.availability.StaffAvailabilityExceptionRepository;
+import com.bookflow.backend.availability.StaffWeeklyHours;
+import com.bookflow.backend.availability.StaffWeeklyHoursRepository;
 import com.bookflow.backend.customer.Customer;
 import com.bookflow.backend.customer.CustomerRepository;
 import com.bookflow.backend.dashboard.DashboardRepository;
@@ -62,8 +69,14 @@ class PersistenceIntegrationTest {
 	@Autowired
 	private AppointmentRepository appointmentRepository;
 
+	@Autowired
+	private StaffWeeklyHoursRepository staffWeeklyHoursRepository;
+
+	@Autowired
+	private StaffAvailabilityExceptionRepository staffAvailabilityExceptionRepository;
+
 	@Test
-	void flywayCreatesTheSixCoreTables() {
+	void flywayCreatesTheCoreAndAvailabilityTables() {
 		Long tableCount = jdbcTemplate.queryForObject("""
 				SELECT COUNT(*)
 				FROM information_schema.tables
@@ -74,7 +87,9 @@ class PersistenceIntegrationTest {
 					'staff',
 					'services',
 					'customers',
-					'appointments'
+					'appointments',
+					'staff_weekly_hours',
+					'staff_availability_exceptions'
 				  )
 				""", Long.class);
 		Long migrationCount = jdbcTemplate.queryForObject("""
@@ -83,8 +98,8 @@ class PersistenceIntegrationTest {
 				WHERE success = TRUE
 				""", Long.class);
 
-		assertEquals(6L, tableCount);
-		assertEquals(1L, migrationCount);
+		assertEquals(8L, tableCount);
+		assertEquals(2L, migrationCount);
 	}
 
 	@Test
@@ -223,6 +238,77 @@ class PersistenceIntegrationTest {
 		assertEquals(
 				new BigDecimal("30.00"),
 				monthlyRevenue.get(11).getRevenue());
+	}
+
+	@Test
+	void availabilityWindowsRemainTenantScopedAndRejectCrossTenantStaff() {
+		Tenant tenantA = saveTenant("Studio A", "studio-a@example.com");
+		Tenant tenantB = saveTenant("Studio B", "studio-b@example.com");
+		Staff staffA = staffRepository.saveAndFlush(new Staff(
+				tenantA,
+				null,
+				"Anna",
+				"Smith",
+				null));
+		Staff staffB = staffRepository.saveAndFlush(new Staff(
+				tenantB,
+				null,
+				"Sophie",
+				"Jones",
+				null));
+		staffWeeklyHoursRepository.saveAndFlush(new StaffWeeklyHours(
+				tenantA,
+				staffA,
+				DayOfWeek.MONDAY,
+				LocalTime.of(9, 0),
+				LocalTime.of(17, 0)));
+		staffAvailabilityExceptionRepository.saveAndFlush(new StaffAvailabilityException(
+				tenantA,
+				staffA,
+				LocalDate.parse("2026-09-14"),
+				AvailabilityExceptionType.UNAVAILABLE,
+				null,
+				null,
+				"Public holiday"));
+		staffWeeklyHoursRepository.saveAndFlush(new StaffWeeklyHours(
+				tenantB,
+				staffB,
+				DayOfWeek.MONDAY,
+				LocalTime.of(10, 0),
+				LocalTime.of(16, 0)));
+
+		assertEquals(
+				1,
+				staffWeeklyHoursRepository
+						.findAllByTenantIdAndStaffIdOrderByDayOfWeekAscStartTimeAsc(
+								tenantA.getId(),
+								staffA.getId())
+						.size());
+		assertEquals(
+				1,
+				staffAvailabilityExceptionRepository
+						.findAllByTenantIdAndStaffIdAndExceptionDate(
+								tenantA.getId(),
+								staffA.getId(),
+								LocalDate.parse("2026-09-14"))
+						.size());
+		assertEquals(
+				0,
+				staffWeeklyHoursRepository
+						.findAllByTenantIdAndStaffIdOrderByDayOfWeekAscStartTimeAsc(
+								tenantA.getId(),
+								staffB.getId())
+						.size());
+
+		StaffWeeklyHours crossTenantHours = new StaffWeeklyHours(
+				tenantA,
+				staffB,
+				DayOfWeek.TUESDAY,
+				LocalTime.of(9, 0),
+				LocalTime.of(12, 0));
+		assertThrows(
+				DataIntegrityViolationException.class,
+				() -> staffWeeklyHoursRepository.saveAndFlush(crossTenantHours));
 	}
 
 	@Test
