@@ -39,5 +39,6 @@ databases:
   - name: bookflow-db
     plan: free
     region: frankfurt
+    postgresMajorVersion: "16"
     databaseName: bookflow
     user: bookflow
