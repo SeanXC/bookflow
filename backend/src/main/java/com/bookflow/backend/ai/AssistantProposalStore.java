@@ -65,7 +65,7 @@ public class AssistantProposalStore {
 						Instant.now(clock).plus(properties.proposalTtl())));
 	}
 
-	void clear() {
+	public void clear() {
 		proposals.clear();
 	}
 

@@ -26,7 +26,7 @@ import tools.jackson.databind.node.ObjectNode;
 
 @Service
 @RequiredArgsConstructor
-@Transactional(readOnly = true)
+@Transactional(readOnly = true, noRollbackFor = InvalidOperationException.class)
 public class BookingToolExecutor {
 
 	private final ServiceRepository serviceRepository;
