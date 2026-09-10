@@ -53,4 +53,8 @@ public class PublicBookingRateLimiter {
 	public Duration window() {
 		return properties.window();
 	}
+
+	public void clear() {
+		windows.clear();
+	}
 }
