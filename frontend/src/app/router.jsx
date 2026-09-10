@@ -11,6 +11,7 @@ import {
   LoginPage,
   RegisterPage,
   ServiceListPage,
+  StaffAvailabilityPage,
   StaffListPage,
   UserListPage,
 } from './lazyPages.jsx'
@@ -59,6 +60,10 @@ export const router = createBrowserRouter([
               {
                 path: 'staff',
                 element: <StaffListPage />,
+              },
+              {
+                path: 'staff/:staffId/availability',
+                element: <StaffAvailabilityPage />,
               },
             ],
           },
