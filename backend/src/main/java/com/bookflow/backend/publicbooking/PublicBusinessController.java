@@ -14,6 +14,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.bookflow.backend.ai.AssistantService;
+import com.bookflow.backend.ai.dto.AssistantChatRequest;
+import com.bookflow.backend.ai.dto.AssistantChatResponse;
 import com.bookflow.backend.availability.dto.AvailableSlotResponse;
 import com.bookflow.backend.common.error.ApiErrorResponse;
 import com.bookflow.backend.publicbooking.dto.PublicAppointmentRequest;
@@ -52,6 +55,7 @@ public class PublicBusinessController {
 	private final PublicProfileService publicProfileService;
 	private final PublicCatalogService publicCatalogService;
 	private final PublicBookingService publicBookingService;
+	private final AssistantService assistantService;
 
 	@GetMapping("/{slug}")
 	@Operation(summary = "Get a public business profile by booking slug")
@@ -88,6 +92,14 @@ public class PublicBusinessController {
 				.stream()
 				.map(AvailableSlotResponse::from)
 				.toList();
+	}
+
+	@PostMapping("/{slug}/assistant")
+	@Operation(summary = "Chat with the public booking assistant for this business")
+	public AssistantChatResponse chatWithAssistant(
+			@PathVariable String slug,
+			@Valid @RequestBody AssistantChatRequest request) {
+		return assistantService.chatForPublicSlug(slug, request);
 	}
 
 	@PostMapping("/{slug}/appointments")
