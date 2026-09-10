@@ -16,6 +16,7 @@ import com.bookflow.backend.auth.dto.AuthenticatedUserResponse;
 import com.bookflow.backend.auth.dto.LoginRequest;
 import com.bookflow.backend.auth.dto.RegisterRequest;
 import com.bookflow.backend.common.exception.DuplicateResourceException;
+import com.bookflow.backend.publicbooking.BookingSlug;
 import com.bookflow.backend.security.AuthenticatedUser;
 import com.bookflow.backend.security.JwtTokenService;
 import com.bookflow.backend.tenant.Tenant;
@@ -44,10 +45,14 @@ public class AuthService {
 		}
 
 		try {
-			Tenant tenant = tenantRepository.save(new Tenant(
+			Tenant tenant = new Tenant(
 					request.businessName().trim(),
 					normalizeEmail(request.businessEmail()),
-					normalizeOptional(request.businessPhone())));
+					normalizeOptional(request.businessPhone()));
+			tenant.assignSlug(BookingSlug.allocate(
+					tenant.getName(),
+					tenantRepository::existsBySlug));
+			tenantRepository.save(tenant);
 			User user = userRepository.saveAndFlush(new User(
 					tenant,
 					ownerEmail,
