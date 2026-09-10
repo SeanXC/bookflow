@@ -12,6 +12,7 @@ import {
   PublicBookingLayout,
   PublicBookingPage,
   PublicBusinessPage,
+  PublicConfirmationPage,
   PublicServicePage,
   RegisterPage,
   ServiceListPage,
@@ -106,6 +107,10 @@ export const router = createBrowserRouter([
       {
         path: 'services/:serviceId/staff/:staffId',
         element: <PublicBookingPage />,
+      },
+      {
+        path: 'confirmation',
+        element: <PublicConfirmationPage />,
       },
     ],
   },

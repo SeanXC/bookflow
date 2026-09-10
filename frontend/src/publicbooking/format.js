@@ -33,6 +33,15 @@ export function formatSlotDate(instant) {
 }
 
 /**
+ * @param {string} startTime
+ * @param {string} endTime
+ * @returns {string}
+ */
+export function formatSlotRange(startTime, endTime) {
+  return `${formatSlotDate(startTime)} · ${formatSlotTime(startTime)} – ${formatSlotTime(endTime)}`
+}
+
+/**
  * @param {string} from
  * @param {string} to
  * @returns {string | null}

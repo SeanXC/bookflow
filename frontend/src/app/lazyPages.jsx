@@ -38,3 +38,6 @@ export const PublicServicePage = lazy(
 export const PublicBookingPage = lazy(
   () => import('../publicbooking/pages/PublicBookingPage.jsx'),
 )
+export const PublicConfirmationPage = lazy(
+  () => import('../publicbooking/pages/PublicConfirmationPage.jsx'),
+)

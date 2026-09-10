@@ -8,7 +8,7 @@ import {
   Stack,
   Typography,
 } from '@mui/material'
-import { Link as RouterLink, useParams } from 'react-router-dom'
+import { Link as RouterLink, useNavigate, useParams } from 'react-router-dom'
 
 import { ApiError } from '../../api/apiError.js'
 import { useCreatePublicAppointment } from '../api/publicBookingMutations.js'
@@ -31,6 +31,7 @@ const currencyFormatter = new Intl.NumberFormat('en-IE', {
 
 function PublicBookingPage() {
   const { slug, serviceId: serviceIdParam, staffId: staffIdParam } = useParams()
+  const navigate = useNavigate()
   const serviceId = Number(serviceIdParam)
   const staffId = Number(staffIdParam)
   const hasValidIds =
@@ -41,9 +42,6 @@ function PublicBookingPage() {
   const [slotRange, setSlotRange] = useState(defaultSlotRange)
   const [selectedSlot, setSelectedSlot] = useState(
     /** @type {import('../types.js').PublicAvailableSlot | null} */ (null),
-  )
-  const [confirmation, setConfirmation] = useState(
-    /** @type {import('../types.js').PublicAppointment | null} */ (null),
   )
   const rangeError = getSlotRangeError(slotRange.from, slotRange.to)
   const businessQuery = usePublicBusiness(slug)
@@ -143,28 +141,6 @@ function PublicBookingPage() {
     )
   }
 
-  if (confirmation) {
-    return (
-      <Stack spacing={3}>
-        <Typography component="h1" fontWeight={800} variant="h4">
-          Appointment confirmed
-        </Typography>
-        <Typography color="text.secondary">
-          {confirmation.service.name} with {confirmation.staff.firstName}{' '}
-          {confirmation.staff.lastName}
-        </Typography>
-        <Button
-          component={RouterLink}
-          sx={{ alignSelf: 'flex-start' }}
-          to={`/book/${slug}`}
-          variant="contained"
-        >
-          Book another appointment
-        </Button>
-      </Stack>
-    )
-  }
-
   /**
    * @param {{
    *   firstName: string,
@@ -190,7 +166,10 @@ function PublicBookingPage() {
         phone: guest.phone,
         notes: guest.notes,
       })
-      setConfirmation(appointment)
+      navigate(`/book/${slug}/confirmation`, {
+        replace: true,
+        state: { appointment },
+      })
     } catch {
       // The mutation error is rendered by the form.
     }
