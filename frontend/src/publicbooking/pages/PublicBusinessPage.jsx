@@ -95,6 +95,32 @@ function PublicBusinessPage() {
         ) : null}
       </Stack>
 
+      <Paper
+        component={RouterLink}
+        elevation={0}
+        sx={{
+          border: 1,
+          borderColor: 'divider',
+          borderRadius: 3,
+          color: 'inherit',
+          display: 'block',
+          p: 3,
+          textDecoration: 'none',
+          '&:hover': {
+            borderColor: 'primary.main',
+          },
+        }}
+        to={`/book/${slug}/assistant`}
+      >
+        <Typography fontWeight={800} variant="h6">
+          Book with the assistant
+        </Typography>
+        <Typography color="text.secondary" mt={1}>
+          Describe what you need. I will check real availability, then wait for
+          you to confirm.
+        </Typography>
+      </Paper>
+
       <Stack spacing={2}>
         <Typography component="h2" fontWeight={800} variant="h5">
           Services

@@ -9,6 +9,7 @@ import {
   CustomerListPage,
   DashboardPage,
   LoginPage,
+  PublicAssistantPage,
   PublicBookingLayout,
   PublicBookingPage,
   PublicBusinessPage,
@@ -111,6 +112,10 @@ export const router = createBrowserRouter([
       {
         path: 'confirmation',
         element: <PublicConfirmationPage />,
+      },
+      {
+        path: 'assistant',
+        element: <PublicAssistantPage />,
       },
     ],
   },
