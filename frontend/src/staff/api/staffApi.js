@@ -2,6 +2,15 @@ import { httpClient } from '../../api/httpClient.js'
 import { toPageParams } from '../../api/pagination.js'
 
 /**
+ * @param {number} staffId
+ * @returns {Promise<import('../types.js').StaffMember>}
+ */
+export async function getStaffById(staffId) {
+  const response = await httpClient.get(`/api/staff/${staffId}`)
+  return response.data
+}
+
+/**
  * @param {{
  *   search?: string,
  *   active?: boolean,

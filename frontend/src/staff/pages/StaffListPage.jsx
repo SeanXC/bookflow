@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import AddIcon from '@mui/icons-material/Add'
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline'
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined'
+import ScheduleOutlinedIcon from '@mui/icons-material/ScheduleOutlined'
 import SearchIcon from '@mui/icons-material/Search'
 import {
   Alert,
@@ -19,6 +20,7 @@ import {
   Typography,
 } from '@mui/material'
 import { DataGrid } from '@mui/x-data-grid'
+import { useNavigate } from 'react-router-dom'
 
 import { useAuth } from '../../auth/context/useAuth.js'
 import { useDebouncedValue } from '../../shared/hooks/useDebouncedValue.js'
@@ -40,6 +42,7 @@ const INITIAL_SORT = [
 ]
 
 function StaffListPage() {
+  const navigate = useNavigate()
   const { user } = useAuth()
   const [searchInput, setSearchInput] = useState('')
   const [activeFilter, setActiveFilter] = useState('active')
@@ -114,15 +117,24 @@ function StaffListPage() {
       },
     ]
 
-    if (isOwner) {
-      baseColumns.push({
-        field: 'actions',
-        headerName: 'Actions',
-        minWidth: 180,
-        sortable: false,
-        filterable: false,
-        renderCell: (params) => (
-          <Stack direction="row" spacing={0.5}>
+    baseColumns.push({
+      field: 'actions',
+      headerName: 'Actions',
+      minWidth: isOwner ? 280 : 130,
+      sortable: false,
+      filterable: false,
+      renderCell: (params) => (
+        <Stack direction="row" spacing={0.5}>
+          <Button
+            onClick={() =>
+              navigate(`/staff/${params.row.id}/availability`)
+            }
+            size="small"
+            startIcon={<ScheduleOutlinedIcon />}
+          >
+            Hours
+          </Button>
+          {isOwner && (
             <Button
               onClick={() => {
                 setEditingStaff(params.row)
@@ -133,23 +145,23 @@ function StaffListPage() {
             >
               Edit
             </Button>
-            {params.row.active && (
-              <Button
-                color="error"
-                onClick={() => setStaffToDeactivate(params.row)}
-                size="small"
-                startIcon={<DeleteOutlineIcon />}
-              >
-                Deactivate
-              </Button>
-            )}
-          </Stack>
-        ),
-      })
-    }
+          )}
+          {isOwner && params.row.active && (
+            <Button
+              color="error"
+              onClick={() => setStaffToDeactivate(params.row)}
+              size="small"
+              startIcon={<DeleteOutlineIcon />}
+            >
+              Deactivate
+            </Button>
+          )}
+        </Stack>
+      ),
+    })
 
     return baseColumns
-  }, [isOwner])
+  }, [isOwner, navigate])
 
   function resetToFirstPage() {
     setPaginationModel((current) => ({ ...current, page: 0 }))

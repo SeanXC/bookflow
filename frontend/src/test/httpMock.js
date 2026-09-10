@@ -7,7 +7,7 @@ import { httpClient } from '../api/httpClient.js'
  * Spies on one Axios method. Tests can use mockResolvedValueOnce with
  * apiResponse() or mockRejectedValueOnce with apiError().
  *
- * @param {'get' | 'post' | 'put' | 'patch'} method
+ * @param {'get' | 'post' | 'put' | 'patch' | 'delete'} method
  */
 export function mockHttp(method) {
   return vi.spyOn(httpClient, method)
