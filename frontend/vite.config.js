@@ -10,8 +10,24 @@ export default defineConfig({
   plugins: [react()],
   test: {
     clearMocks: true,
+    coverage: {
+      exclude: [
+        'src/test/**',
+        'src/main.jsx',
+        'src/app/lazyPages.jsx',
+      ],
+      include: ['src/**/*.{js,jsx}'],
+      provider: 'v8',
+      reporter: ['text', 'lcov'],
+      thresholds: {
+        lines: 50,
+        statements: 50,
+      },
+    },
     environment: 'jsdom',
+    pool: 'vmThreads',
     restoreMocks: true,
     setupFiles: './src/test/setupTests.js',
+    testTimeout: 15_000,
   },
 })

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<FindBugsFilter>
+	<!-- JPA entities and records expose persisted values through accessors. -->
+	<Match>
+		<Bug pattern="EI_EXPOSE_REP,EI_EXPOSE_REP2"/>
+	</Match>
+	<!-- Lombok-generated constructors and accessors. -->
+	<Match>
+		<Bug pattern="NP_NONNULL_RETURN_VIOLATION,RCN_REDUNDANT_NULLCHECK_OF_NONNULL_VALUE"/>
+	</Match>
+	<!-- This class models an availability override, not a throwable exception. -->
+	<Match>
+		<Class name="com.bookflow.backend.availability.StaffAvailabilityException"/>
+		<Bug pattern="NM_CLASS_NOT_EXCEPTION"/>
+	</Match>
+</FindBugsFilter>
