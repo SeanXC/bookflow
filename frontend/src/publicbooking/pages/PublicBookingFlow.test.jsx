@@ -136,6 +136,9 @@ describe('public booking flow', () => {
       await screen.findByRole('heading', { name: 'Glow Studio' }),
     ).toBeInTheDocument()
     expect(screen.getByText('Colour and cuts')).toBeInTheDocument()
+    expect(
+      screen.getByRole('link', { name: /Book with the assistant/ }),
+    ).toHaveAttribute('href', '/book/glow-studio/assistant')
 
     await user.click(screen.getByRole('link', { name: /Haircut/ }))
     expect(
