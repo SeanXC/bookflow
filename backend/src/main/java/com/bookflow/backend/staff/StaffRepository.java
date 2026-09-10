@@ -1,5 +1,6 @@
 package com.bookflow.backend.staff;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.domain.Page;
@@ -43,6 +44,10 @@ public interface StaffRepository extends JpaRepository<Staff, Long> {
 			Long tenantId,
 			boolean active,
 			Pageable pageable);
+
+	List<Staff> findAllByTenantIdAndActiveOrderByLastNameAscFirstNameAscIdAsc(
+			Long tenantId,
+			boolean active);
 
 	@Lock(LockModeType.PESSIMISTIC_WRITE)
 	@Query("""

@@ -206,6 +206,15 @@ public class AvailabilityService {
 		if (!service.isActive()) {
 			throw new InvalidOperationException("Inactive services cannot be booked");
 		}
+		return calculateSlots(tenantId, staff, service, fromDate, toDate);
+	}
+
+	public List<AvailableSlot> calculateSlots(
+			Long tenantId,
+			Staff staff,
+			com.bookflow.backend.service.Service service,
+			LocalDate fromDate,
+			LocalDate toDate) {
 		validateDateRange(
 				fromDate,
 				toDate,

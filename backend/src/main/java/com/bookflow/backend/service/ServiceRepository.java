@@ -1,5 +1,6 @@
 package com.bookflow.backend.service;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.domain.Page;
@@ -36,4 +37,8 @@ public interface ServiceRepository extends JpaRepository<Service, Long> {
 			Long tenantId,
 			boolean active,
 			Pageable pageable);
+
+	List<Service> findAllByTenantIdAndActiveOrderByNameAscIdAsc(
+			Long tenantId,
+			boolean active);
 }
