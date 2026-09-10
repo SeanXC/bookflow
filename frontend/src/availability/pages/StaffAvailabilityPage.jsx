@@ -364,7 +364,10 @@ function StaffAvailabilityPage() {
             columns={weeklyHoursColumns}
             disableRowSelectionOnClick
             loading={weeklyHoursQuery.isFetching}
-            pageSizeOptions={[10, 25]}
+            initialState={{
+              pagination: { paginationModel: { pageSize: 10 } },
+            }}
+            pageSizeOptions={[10, 25, 100]}
             rows={weeklyHoursRows}
           />
         )}
@@ -448,7 +451,10 @@ function StaffAvailabilityPage() {
             columns={exceptionColumns}
             disableRowSelectionOnClick
             loading={exceptionsQuery.isFetching}
-            pageSizeOptions={[10, 25]}
+            initialState={{
+              pagination: { paginationModel: { pageSize: 10 } },
+            }}
+            pageSizeOptions={[10, 25, 100]}
             rows={exceptionsQuery.data ?? []}
           />
         )}
