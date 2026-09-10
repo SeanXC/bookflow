@@ -26,3 +26,18 @@ export const StaffListPage = lazy(
 export const UserListPage = lazy(
   () => import('../user/pages/UserListPage.jsx'),
 )
+export const PublicBookingLayout = lazy(
+  () => import('../publicbooking/components/PublicBookingLayout.jsx'),
+)
+export const PublicBusinessPage = lazy(
+  () => import('../publicbooking/pages/PublicBusinessPage.jsx'),
+)
+export const PublicServicePage = lazy(
+  () => import('../publicbooking/pages/PublicServicePage.jsx'),
+)
+export const PublicBookingPage = lazy(
+  () => import('../publicbooking/pages/PublicBookingPage.jsx'),
+)
+export const PublicConfirmationPage = lazy(
+  () => import('../publicbooking/pages/PublicConfirmationPage.jsx'),
+)
