@@ -109,7 +109,7 @@ class AppointmentServiceTest {
 		assertEquals(Instant.parse("2026-09-12T15:30:00Z"), appointment.getEndTime());
 		assertEquals(AppointmentStatus.CONFIRMED, appointment.getStatus());
 		assertEquals("First visit", appointment.getNotes());
-		verify(availabilityService).ensureRequestedSlotIsAvailable(
+		verify(availabilityService).assertRequestedSlotIsAvailable(
 				TENANT_ID,
 				STAFF_ID,
 				90,
@@ -154,7 +154,7 @@ class AppointmentServiceTest {
 		doThrow(new InvalidOperationException(
 				"The requested start time is not an available booking slot"))
 				.when(availabilityService)
-				.ensureRequestedSlotIsAvailable(
+				.assertRequestedSlotIsAvailable(
 						TENANT_ID,
 						STAFF_ID,
 						60,
@@ -222,7 +222,7 @@ class AppointmentServiceTest {
 				any(),
 				any(),
 				any());
-		verify(availabilityService, never()).ensureRequestedSlotIsAvailable(
+		verify(availabilityService, never()).assertRequestedSlotIsAvailable(
 				anyLong(),
 				anyLong(),
 				anyInt(),
@@ -251,7 +251,7 @@ class AppointmentServiceTest {
 				any(),
 				any(),
 				any());
-		verify(availabilityService, never()).ensureRequestedSlotIsAvailable(
+		verify(availabilityService, never()).assertRequestedSlotIsAvailable(
 				anyLong(),
 				anyLong(),
 				anyInt(),
@@ -293,7 +293,7 @@ class AppointmentServiceTest {
 		assertEquals(newStartTime, updated.getStartTime());
 		assertEquals(Instant.parse("2026-09-13T09:45:00Z"), updated.getEndTime());
 		assertEquals("Rescheduled", updated.getNotes());
-		verify(availabilityService).ensureRequestedSlotIsAvailable(
+		verify(availabilityService).assertRequestedSlotIsAvailable(
 				TENANT_ID,
 				STAFF_ID,
 				45,
@@ -359,7 +359,7 @@ class AppointmentServiceTest {
 		doThrow(new InvalidOperationException(
 				"The requested start time is not an available booking slot"))
 				.when(availabilityService)
-				.ensureRequestedSlotIsAvailable(
+				.assertRequestedSlotIsAvailable(
 						TENANT_ID,
 						STAFF_ID,
 						60,

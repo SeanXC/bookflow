@@ -92,6 +92,8 @@ class AuthServiceTest {
 		assertEquals("Glow Studio", tenantCaptor.getValue().getName());
 		assertEquals("hello@example.com", tenantCaptor.getValue().getEmail());
 		assertEquals("+353123456", tenantCaptor.getValue().getPhone());
+		assertEquals("glow-studio", tenantCaptor.getValue().getSlug());
+		assertEquals(true, tenantCaptor.getValue().isPublicBookingEnabled());
 
 		ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
 		verify(userRepository).saveAndFlush(userCaptor.capture());

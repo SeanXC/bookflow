@@ -99,7 +99,7 @@ class PersistenceIntegrationTest {
 				""", Long.class);
 
 		assertEquals(8L, tableCount);
-		assertEquals(2L, migrationCount);
+		assertEquals(3L, migrationCount);
 	}
 
 	@Test
