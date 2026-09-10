@@ -4,6 +4,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -18,6 +21,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import com.bookflow.backend.availability.AvailabilityService;
 import com.bookflow.backend.common.exception.AppointmentConflictException;
 import com.bookflow.backend.common.exception.InvalidOperationException;
 import com.bookflow.backend.common.exception.ResourceNotFoundException;
@@ -56,6 +60,9 @@ class AppointmentServiceTest {
 	private ServiceRepository serviceRepository;
 
 	@Mock
+	private AvailabilityService availabilityService;
+
+	@Mock
 	private CurrentUserProvider currentUserProvider;
 
 	private AppointmentService appointmentService;
@@ -68,6 +75,7 @@ class AppointmentServiceTest {
 				customerRepository,
 				staffRepository,
 				serviceRepository,
+				availabilityService,
 				currentUserProvider);
 	}
 
@@ -101,6 +109,11 @@ class AppointmentServiceTest {
 		assertEquals(Instant.parse("2026-09-12T15:30:00Z"), appointment.getEndTime());
 		assertEquals(AppointmentStatus.CONFIRMED, appointment.getStatus());
 		assertEquals("First visit", appointment.getNotes());
+		verify(availabilityService).ensureRequestedSlotIsAvailable(
+				TENANT_ID,
+				STAFF_ID,
+				90,
+				START_TIME);
 		verify(appointmentRepository).countConflictingAppointments(
 				TENANT_ID,
 				STAFF_ID,
@@ -131,6 +144,38 @@ class AppointmentServiceTest {
 						START_TIME,
 						null));
 
+		verify(appointmentRepository, never()).save(any(Appointment.class));
+	}
+
+	@Test
+	void createAppointmentRejectsATimeOutsideAvailableSlots() {
+		BookingResources resources = activeResources(60);
+		stubResources(resources);
+		doThrow(new InvalidOperationException(
+				"The requested start time is not an available booking slot"))
+				.when(availabilityService)
+				.ensureRequestedSlotIsAvailable(
+						TENANT_ID,
+						STAFF_ID,
+						60,
+						START_TIME);
+
+		assertThrows(
+				InvalidOperationException.class,
+				() -> appointmentService.createAppointment(
+						TENANT_ID,
+						CUSTOMER_ID,
+						STAFF_ID,
+						SERVICE_ID,
+						START_TIME,
+						null));
+
+		verify(appointmentRepository, never()).countConflictingAppointments(
+				any(),
+				any(),
+				any(),
+				any(),
+				any());
 		verify(appointmentRepository, never()).save(any(Appointment.class));
 	}
 
@@ -177,6 +222,11 @@ class AppointmentServiceTest {
 				any(),
 				any(),
 				any());
+		verify(availabilityService, never()).ensureRequestedSlotIsAvailable(
+				anyLong(),
+				anyLong(),
+				anyInt(),
+				any());
 	}
 
 	@Test
@@ -200,6 +250,11 @@ class AppointmentServiceTest {
 				any(),
 				any(),
 				any(),
+				any());
+		verify(availabilityService, never()).ensureRequestedSlotIsAvailable(
+				anyLong(),
+				anyLong(),
+				anyInt(),
 				any());
 	}
 
@@ -238,6 +293,11 @@ class AppointmentServiceTest {
 		assertEquals(newStartTime, updated.getStartTime());
 		assertEquals(Instant.parse("2026-09-13T09:45:00Z"), updated.getEndTime());
 		assertEquals("Rescheduled", updated.getNotes());
+		verify(availabilityService).ensureRequestedSlotIsAvailable(
+				TENANT_ID,
+				STAFF_ID,
+				45,
+				newStartTime);
 		verify(appointmentRepository).countConflictingAppointmentsExcluding(
 				TENANT_ID,
 				STAFF_ID,
@@ -281,6 +341,49 @@ class AppointmentServiceTest {
 						null));
 
 		assertEquals(START_TIME, appointment.getStartTime());
+	}
+
+	@Test
+	void updateAppointmentRejectsATimeOutsideAvailableSlots() {
+		BookingResources resources = activeResources(60);
+		Appointment appointment = appointment(resources, START_TIME, 60);
+		Instant newStartTime = Instant.parse("2026-09-13T09:00:00Z");
+		when(appointmentRepository.findByIdAndTenantId(APPOINTMENT_ID, TENANT_ID))
+				.thenReturn(Optional.of(appointment));
+		when(customerRepository.findByIdAndTenantId(CUSTOMER_ID, TENANT_ID))
+				.thenReturn(Optional.of(resources.customer()));
+		when(staffRepository.findForUpdateByIdAndTenantId(STAFF_ID, TENANT_ID))
+				.thenReturn(Optional.of(resources.staff()));
+		when(serviceRepository.findByIdAndTenantId(SERVICE_ID, TENANT_ID))
+				.thenReturn(Optional.of(resources.service()));
+		doThrow(new InvalidOperationException(
+				"The requested start time is not an available booking slot"))
+				.when(availabilityService)
+				.ensureRequestedSlotIsAvailable(
+						TENANT_ID,
+						STAFF_ID,
+						60,
+						newStartTime);
+
+		assertThrows(
+				InvalidOperationException.class,
+				() -> appointmentService.updateAppointment(
+						TENANT_ID,
+						APPOINTMENT_ID,
+						CUSTOMER_ID,
+						STAFF_ID,
+						SERVICE_ID,
+						newStartTime,
+						null));
+
+		assertEquals(START_TIME, appointment.getStartTime());
+		verify(appointmentRepository, never()).countConflictingAppointmentsExcluding(
+				any(),
+				any(),
+				any(),
+				any(),
+				any(),
+				any());
 	}
 
 	private void stubResources(BookingResources resources) {

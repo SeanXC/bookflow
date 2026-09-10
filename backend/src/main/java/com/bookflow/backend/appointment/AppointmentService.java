@@ -10,6 +10,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.bookflow.backend.availability.AvailabilityService;
 import com.bookflow.backend.common.exception.AppointmentConflictException;
 import com.bookflow.backend.common.exception.InvalidOperationException;
 import com.bookflow.backend.common.exception.ResourceNotFoundException;
@@ -35,6 +36,7 @@ public class AppointmentService {
 	private final CustomerRepository customerRepository;
 	private final StaffRepository staffRepository;
 	private final ServiceRepository serviceRepository;
+	private final AvailabilityService availabilityService;
 	private final CurrentUserProvider currentUserProvider;
 
 	@PreAuthorize("hasAnyRole('OWNER', 'RECEPTIONIST', 'STAFF')")
@@ -108,6 +110,11 @@ public class AppointmentService {
 		}
 
 		Instant endTime = startTime.plus(service.getDurationMinutes(), ChronoUnit.MINUTES);
+		availabilityService.ensureRequestedSlotIsAvailable(
+				tenantId,
+				staffId,
+				service.getDurationMinutes(),
+				startTime);
 		long conflicts = appointmentRepository.countConflictingAppointments(
 				tenantId,
 				staffId,
@@ -160,6 +167,11 @@ public class AppointmentService {
 		}
 
 		Instant endTime = startTime.plus(service.getDurationMinutes(), ChronoUnit.MINUTES);
+		availabilityService.ensureRequestedSlotIsAvailable(
+				tenantId,
+				staffId,
+				service.getDurationMinutes(),
+				startTime);
 		long conflicts = appointmentRepository.countConflictingAppointmentsExcluding(
 				tenantId,
 				staffId,

@@ -2,6 +2,7 @@ package com.bookflow.backend.availability;
 
 import java.time.Clock;
 import java.time.DayOfWeek;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.ZoneId;
@@ -245,6 +246,39 @@ public class AvailabilityService {
 				weeklyHours,
 				exceptions,
 				busyPeriods);
+	}
+
+	@PreAuthorize("hasAnyRole('OWNER', 'RECEPTIONIST')")
+	public void ensureRequestedSlotIsAvailable(
+			Long tenantId,
+			Long staffId,
+			int durationMinutes,
+			Instant startTime) {
+		getStaff(tenantId, staffId);
+		ZoneId zone = businessClock.getZone();
+		LocalDate date = LocalDate.ofInstant(startTime, zone);
+		boolean bookable = AvailabilitySlotCalculator.calculate(
+				date,
+				date,
+				durationMinutes,
+				zone,
+				weeklyHoursRepository
+						.findAllByTenantIdAndStaffIdOrderByDayOfWeekAscStartTimeAsc(
+								tenantId,
+								staffId),
+				exceptionRepository
+						.findAllByTenantIdAndStaffIdAndExceptionDateBetweenOrderByExceptionDateAscStartTimeAsc(
+								tenantId,
+								staffId,
+								date,
+								date),
+				List.of())
+				.stream()
+				.anyMatch(slot -> slot.startTime().equals(startTime));
+		if (!bookable) {
+			throw new InvalidOperationException(
+					"The requested start time is not an available booking slot");
+		}
 	}
 
 	private Staff getAccessibleStaff(Long tenantId, Long staffId) {

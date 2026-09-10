@@ -22,6 +22,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
 
+import com.bookflow.backend.availability.AvailabilityService;
 import com.bookflow.backend.common.exception.InvalidOperationException;
 import com.bookflow.backend.customer.Customer;
 import com.bookflow.backend.customer.CustomerRepository;
@@ -58,6 +59,9 @@ class AppointmentAccessServiceTest {
 	private ServiceRepository serviceRepository;
 
 	@Mock
+	private AvailabilityService availabilityService;
+
+	@Mock
 	private CurrentUserProvider currentUserProvider;
 
 	private AppointmentService appointmentService;
@@ -70,6 +74,7 @@ class AppointmentAccessServiceTest {
 				customerRepository,
 				staffRepository,
 				serviceRepository,
+				availabilityService,
 				currentUserProvider);
 	}
 

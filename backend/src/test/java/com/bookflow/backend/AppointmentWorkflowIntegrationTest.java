@@ -10,7 +10,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.math.BigDecimal;
+import java.time.DayOfWeek;
 import java.time.Instant;
+import java.time.LocalTime;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
@@ -33,6 +35,8 @@ import org.springframework.test.web.servlet.MvcResult;
 
 import com.bookflow.backend.appointment.Appointment;
 import com.bookflow.backend.appointment.AppointmentRepository;
+import com.bookflow.backend.availability.StaffWeeklyHours;
+import com.bookflow.backend.availability.StaffWeeklyHoursRepository;
 import com.bookflow.backend.auth.AuthService;
 import com.bookflow.backend.auth.dto.AuthResponse;
 import com.bookflow.backend.auth.dto.RegisterRequest;
@@ -91,10 +95,14 @@ class AppointmentWorkflowIntegrationTest {
 	@Autowired
 	private AppointmentRepository appointmentRepository;
 
+	@Autowired
+	private StaffWeeklyHoursRepository staffWeeklyHoursRepository;
+
 	@BeforeEach
 	@AfterEach
 	void cleanDatabase() {
 		appointmentRepository.deleteAllInBatch();
+		staffWeeklyHoursRepository.deleteAllInBatch();
 		staffRepository.deleteAllInBatch();
 		serviceRepository.deleteAllInBatch();
 		customerRepository.deleteAllInBatch();
@@ -274,6 +282,18 @@ class AppointmentWorkflowIntegrationTest {
 						null,
 						new BigDecimal("30.00"),
 						durationMinutes));
+		staffWeeklyHoursRepository.saveAndFlush(new StaffWeeklyHours(
+				tenant,
+				staff,
+				DayOfWeek.SATURDAY,
+				LocalTime.of(9, 0),
+				LocalTime.of(18, 0)));
+		staffWeeklyHoursRepository.saveAndFlush(new StaffWeeklyHours(
+				tenant,
+				staff,
+				DayOfWeek.SUNDAY,
+				LocalTime.of(9, 0),
+				LocalTime.of(18, 0)));
 		return new BookingFixture(
 				owner.accessToken(),
 				tenant,
