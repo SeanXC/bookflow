@@ -15,6 +15,26 @@ isolated tenant workspace. The hosted environment uses free-tier infrastructure
 and is intended for portfolio demonstration, so the first API request can take
 50 seconds or more while Render wakes the service.
 
+## Product Tour
+
+### Dashboard and appointment operations
+
+![Dashboard analytics with revenue, customers, cancellations, and recent appointments](docs/images/dashboard.jpeg)
+
+![Appointment management with filters, statuses, and lifecycle actions](docs/images/appointment-management.jpeg)
+
+### Availability-driven scheduling
+
+![Weekly staff hours, split shifts, and date-specific exceptions](docs/images/staff-availability.jpeg)
+
+### Public and AI-assisted booking
+
+![Public service catalog for a tenant booking page](docs/images/public-booking-services.jpeg)
+
+![Real bookable slots calculated from staff availability](docs/images/public-booking-slots.jpeg)
+
+![AI assistant conversation with an explicit booking confirmation proposal](docs/images/ai-booking-assistant.jpeg)
+
 ## Features
 
 - Tenant-isolated registration, authentication, and business data
