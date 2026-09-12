@@ -42,7 +42,7 @@ backups and expires after 30 days. Upgrade it before storing durable data.
 4. Add this Production environment variable:
 
    ```text
-   VITE_API_BASE_URL=https://bookflow-api.onrender.com
+   VITE_API_BASE_URL=https://bookflow-api-atib.onrender.com
    ```
 
    Use the actual Render service URL if Render assigned a different hostname.
@@ -61,7 +61,7 @@ Do not use `*`: authenticated browser requests require explicit trusted origins.
 
 Verify:
 
-1. `GET https://bookflow-api.onrender.com/api/public/health` returns `UP`.
+1. `GET https://bookflow-api-atib.onrender.com/api/public/health` returns `UP`.
 2. Register an owner through the Vercel frontend.
 3. Create a service, staff member, working hours, and appointment.
 4. Open the public `/book/{slug}` page in a signed-out browser.
