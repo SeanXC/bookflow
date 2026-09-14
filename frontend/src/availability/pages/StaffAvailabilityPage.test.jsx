@@ -87,7 +87,7 @@ describe('StaffAvailabilityPage', () => {
       }
       return Promise.reject(new Error(`Unexpected GET ${url}`))
     })
-    const del = mockHttp('delete').mockResolvedValueOnce(apiResponse(null))
+    const del = mockHttp('delete').mockResolvedValue(apiResponse(null))
     const { user } = renderPage()
 
     expect(
@@ -117,7 +117,53 @@ describe('StaffAvailabilityPage', () => {
         '/api/staff/40/availability/weekly-hours/7',
       ),
     )
-  })
+
+    await user.click(screen.getAllByRole('button', { name: 'Edit' })[0])
+    expect(
+      within(screen.getByRole('dialog')).getByText('Edit weekly hours'),
+    ).toBeInTheDocument()
+    await user.click(
+      within(screen.getByRole('dialog')).getByRole('button', { name: 'Cancel' }),
+    )
+
+    await user.click(screen.getByRole('button', { name: 'Add hours' }))
+    expect(
+      within(screen.getByRole('dialog')).getByText('Add weekly hours'),
+    ).toBeInTheDocument()
+    await user.click(
+      within(screen.getByRole('dialog')).getByRole('button', { name: 'Cancel' }),
+    )
+
+    await user.click(screen.getAllByRole('button', { name: 'Edit' })[1])
+    expect(
+      within(screen.getByRole('dialog')).getByText('Edit exception'),
+    ).toBeInTheDocument()
+    await user.click(
+      within(screen.getByRole('dialog')).getByRole('button', { name: 'Cancel' }),
+    )
+
+    await user.click(screen.getByRole('button', { name: 'Add exception' }))
+    expect(
+      within(screen.getByRole('dialog')).getByText('Add exception'),
+    ).toBeInTheDocument()
+    await user.click(
+      within(screen.getByRole('dialog')).getByRole('button', { name: 'Cancel' }),
+    )
+
+    await user.click(screen.getAllByRole('button', { name: 'Delete' })[1])
+    expect(
+      within(screen.getByRole('dialog')).getByText('Delete exception?'),
+    ).toBeInTheDocument()
+    await user.click(
+      within(screen.getByRole('dialog')).getByRole('button', { name: 'Delete' }),
+    )
+
+    await waitFor(() =>
+      expect(del).toHaveBeenCalledWith(
+        '/api/staff/40/availability/exceptions/9',
+      ),
+    )
+  }, 30000)
 
   it('does not fetch exceptions for an inverted date range', async () => {
     const get = mockHttp('get').mockImplementation((url) => {
