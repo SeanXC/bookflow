@@ -177,7 +177,7 @@ npm run test:coverage
 npm run build
 ```
 
-CI enforces a 60% backend line-coverage floor, a 50% frontend line and statement
+CI enforces a 90% backend line-coverage floor, a 90% frontend line and statement
 coverage floor, and zero unexcluded Medium-or-higher SpotBugs findings.
 
 ## Project Structure
