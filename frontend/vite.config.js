@@ -20,8 +20,8 @@ export default defineConfig({
       provider: 'v8',
       reporter: ['text', 'lcov'],
       thresholds: {
-        lines: 50,
-        statements: 50,
+        lines: 90,
+        statements: 90,
       },
     },
     environment: 'jsdom',
