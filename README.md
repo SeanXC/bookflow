@@ -21,7 +21,7 @@ and is intended for portfolio demonstration, so the first API request can take
 
 ![Dashboard analytics with revenue, customers, cancellations, and recent appointments](docs/images/dashboard.jpeg)
 
-![Appointment management with filters, statuses, and lifecycle actions](docs/images/appointment-management.jpeg)
+![Appointment management with filters, statuses, and lifecycle actions](docs/images/appointment-management.png)
 
 ### Availability-driven scheduling
 
